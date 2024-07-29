@@ -1,0 +1,45 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+using System.IO;
+
+public class PlayerManager : MonoBehaviour
+{
+    PhotonView PV;
+
+    void Awake()
+    {
+        PV = GetComponent<PhotonView>();
+    }
+
+    void Start()
+    {
+        if (PV.IsMine)
+        {
+            CreateController();
+        }
+    }
+
+    void CreateController()
+    {
+        // PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), Vector3.zero, Quaternion.identity);
+
+        // Calculate the spawn position above ground level
+        Vector3 spawnPosition = Vector3.zero; // Default spawn position (modify as needed)
+        float spawnHeightAboveGround = 2.0f; // Adjust this value to set the spawn height above ground
+
+        // Perform a raycast to find the ground level if needed
+        RaycastHit hit;
+        if (Physics.Raycast(Vector3.zero, Vector3.down, out hit, Mathf.Infinity, LayerMask.GetMask("Ground")))
+        {
+            spawnPosition = hit.point + Vector3.up * spawnHeightAboveGround;
+        }
+        else
+        {
+            spawnPosition = Vector3.up * spawnHeightAboveGround; // Default to a fixed height above the origin
+        }
+
+        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), spawnPosition, Quaternion.identity);
+    }
+}
