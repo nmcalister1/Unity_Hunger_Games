@@ -12524,7 +12524,7 @@ MonoBehaviour:
   fastFeetPrefab: {fileID: 4265922556928499812, guid: 8e491f1bf95c4a7469a838dcde098866, type: 3}
   lightningPrefab: {fileID: 883617844277286153, guid: 0b7a42bb5d417e41bb8926e9ac03aecb, type: 3}
   laserGunPrefab: {fileID: 3288352066536671832, guid: 192b0e14df282b09d837949178bba9c2, type: 3}
-  rocketLauncherPrefab: {fileID: 7249833503941229544, guid: 8bafab345c771a4508bcc68352d781cf, type: 3}
+  rocketLauncherPrefab: {fileID: 1411512464560164, guid: 02baef62b1bfedf40bb369fb7542b9e7, type: 3}
   invisibilityCloakPrefab: {fileID: 4491078920155804234, guid: 2693a2c14ed2e3a40b5e913d0fc3125f, type: 3}
   chickenPrefab: {fileID: 3600518211483255162, guid: ae65ec722b39fc761b48699cfe06203d, type: 3}
   minesPrefab: {fileID: 6230188407846640569, guid: d4591faac1c91327aa716fa572b94845, type: 3}

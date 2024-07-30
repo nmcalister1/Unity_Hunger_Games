@@ -66,8 +66,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2545692379373975565, guid: 11530f2b0a0cd2442949827ecbb622f2, type: 3}
       propertyPath: speed
-      value: 100
+      value: 150
       objectReference: {fileID: 0}
+    - target: {fileID: 2545692379373975565, guid: 11530f2b0a0cd2442949827ecbb622f2, type: 3}
+      propertyPath: explosionEffectPrefab
+      value: 
+      objectReference: {fileID: 6823302871133167919, guid: 3138a83bedbd6ad4481ba0b061da2eb6, type: 3}
     m_RemovedComponents:
     - {fileID: 4974470824342295498, guid: 11530f2b0a0cd2442949827ecbb622f2, type: 3}
     m_RemovedGameObjects: []

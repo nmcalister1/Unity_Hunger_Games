@@ -54,6 +54,12 @@ MonoBehaviour:
   - RPC_SetVelocity
   - RPC_DisableRocketLauncher
   - RPC_SetVelocityRocketProjectile
+  - RPC_TriggerExplosion
+  - RPC_HidePlayer
+  - RPC_ApplyRecoil
+  - ShowHealingEffect
+  - RPC_ShowExplosionEffect
+  - ShowExplosionEffectCoroutine
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

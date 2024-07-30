@@ -14,6 +14,7 @@ namespace RPG.Character
         [SerializeField] private float mouseSensitivity = 2f, walkSpeed = 4f, jumpForce = 5f, smoothTime = 0.1f, sprintSpeed = 6f;
         [SerializeField] private GameObject fastFeetEffectPrefab; // Reference to the Fast Feet effect prefab
         [SerializeField] private GameObject lightningEffectPrefab; // Reference to the Lightning effect prefab
+        [SerializeField] private GameObject healingEffectPrefab; // Reference to the Invisibility effect prefab
         [SerializeField] private GameObject sciFiRifle;
 
 
@@ -26,7 +27,7 @@ namespace RPG.Character
 
 
 
-
+        public float recoilForce = 10f;
 
 
         private float verticalLookRotation;
@@ -214,13 +215,16 @@ namespace RPG.Character
             // You can add logic to handle what happens when the player dies
             Debug.Log("Player has died!");
 
-
-
-
-            // For example, you can disable the player, show a respawn screen, etc.
-            gameObject.SetActive(false);
+            // Call RPC to hide the player for all clients
+            photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
         }
 
+        [PunRPC]
+        private void RPC_HidePlayer()
+        {
+            // Hide the player by disabling the game object
+            gameObject.SetActive(false);
+        }
 
 
 
@@ -515,7 +519,7 @@ namespace RPG.Character
         private IEnumerator ShowLightningEffectCoroutine(Vector3 position)
         {
             GameObject lightningEffect = Instantiate(lightningEffectPrefab, position, Quaternion.identity);
-            yield return new WaitForSeconds(1f); // Duration of the effect
+            yield return new WaitForSeconds(0.7f); // Duration of the effect
             Destroy(lightningEffect); // Remove the effect after 1 second
         }
 
@@ -528,8 +532,22 @@ namespace RPG.Character
             {
                 Debug.Log("Consuming chicken!");
                 inventory.ResetInventory(); // Reset the inventory
-                PV.RPC("IncreaseHealth", RpcTarget.All, 25);
+                PV.RPC("IncreaseHealth", RpcTarget.All, 35);
+                PV.RPC("ShowHealingEffect", RpcTarget.All, transform.position);
             }
+        }
+
+        [PunRPC]
+        private void ShowHealingEffect(Vector3 position)
+        {
+            StartCoroutine(ShowHealingEffectCoroutine(position));
+        }
+
+        private IEnumerator ShowHealingEffectCoroutine(Vector3 position)
+        {
+            GameObject healingEffect = Instantiate(healingEffectPrefab, position, Quaternion.identity);
+            yield return new WaitForSeconds(0.7f); // Duration of the effect
+            Destroy(healingEffect); // Remove the effect after 1 second
         }
 
 
@@ -800,7 +818,7 @@ namespace RPG.Character
 
 
 
-                    GameObject rocketProjectile = PhotonNetwork.Instantiate("Prefabs/Rocket_Launcher_Missile", spawnPosition, Quaternion.identity);
+                    GameObject rocketProjectile = PhotonNetwork.Instantiate("Prefabs/SingleLine-LightSaber Variant 1", spawnPosition, Quaternion.identity);
 
 
 
@@ -820,6 +838,10 @@ namespace RPG.Character
 
                         // Synchronize the projectile's velocity across all clients
                         projectilePV.RPC("RPC_SetVelocityRocketProjectile", RpcTarget.AllBuffered, projectileRb.velocity);
+
+                        // Apply recoil to the player and synchronize it
+                        ApplyRecoil(-shootDirection);
+                        PV.RPC("RPC_ApplyRecoil", RpcTarget.Others, -shootDirection * recoilForce);
                     }
 
 
@@ -844,6 +866,17 @@ namespace RPG.Character
                     }
                 }
             }
+        }
+
+        [PunRPC]
+        private void RPC_ApplyRecoil(Vector3 recoilForce)
+        {
+            rb.AddForce(recoilForce, ForceMode.Impulse);
+        }
+
+        private void ApplyRecoil(Vector3 recoilDirection)
+        {
+            rb.AddForce(recoilDirection * recoilForce, ForceMode.Impulse);
         }
 
 
@@ -905,6 +938,7 @@ namespace RPG.Character
             // Optionally, you might want to destroy the weapon object or disable it
             // For example: Destroy(gameObject);
             photonView.RPC("RPC_DisableLaserGun", RpcTarget.AllBuffered);
+            photonView.RPC("RPC_DisableRocketLauncher", RpcTarget.AllBuffered);
             shotsRemaining = 3; // Reset the number of shots remaining
         }
 
@@ -925,33 +959,6 @@ namespace RPG.Character
         {
             rocketLauncher.SetActive(false);
         }
-
-
-
-
-
-
-
-
-        // private void OnCollisionEnter(Collision collision)
-        // {
-        //     if (collision.gameObject.CompareTag("Player"))
-        //     {
-        //         PhotonView targetPV = collision.gameObject.GetComponent<PhotonView>();
-        //         if (targetPV != null && targetPV.IsMine == false)
-        //         {
-        //             targetPV.RPC("TakeDamage", RpcTarget.All, 35); // Adjust the damage value as needed
-        //         }
-
-
-
-
-        //         // Destroy the projectile after it hits something
-        //         PhotonNetwork.Destroy(gameObject);
-        //     }
-        // }
-
-
 
 
     }
