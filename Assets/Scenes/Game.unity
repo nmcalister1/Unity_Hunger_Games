@@ -12528,6 +12528,7 @@ MonoBehaviour:
   invisibilityCloakPrefab: {fileID: 4491078920155804234, guid: 2693a2c14ed2e3a40b5e913d0fc3125f, type: 3}
   chickenPrefab: {fileID: 3600518211483255162, guid: ae65ec722b39fc761b48699cfe06203d, type: 3}
   minesPrefab: {fileID: 6230188407846640569, guid: d4591faac1c91327aa716fa572b94845, type: 3}
+  swordsPrefab: {fileID: 2456826854572316607, guid: e6bcf872a4cc2a388a4bffce3b2d2f4d, type: 3}
   spawnInterval: 15
   terrainGrid: {fileID: 1230851416}
 --- !u!4 &842451672

@@ -54,14 +54,11 @@ namespace RPG.Character
            // Determine if the item is a weapon or inventory item
            if (IsWeapon(itemName))
            {
-               if (currentWeapon == "RocketLauncher" && itemName == "LaserGun")
-               {
-                   photonView.RPC("RPC_DisableRocketLauncher", RpcTarget.AllBuffered);
-               }
-               if (currentWeapon == "LaserGun" && itemName == "RocketLauncher")
-               {
-                   photonView.RPC("RPC_DisableLaserGun", RpcTarget.AllBuffered);
-               }
+               
+                photonView.RPC("RPC_DisableRocketLauncher", RpcTarget.AllBuffered);
+                photonView.RPC("RPC_DisableLaserGun", RpcTarget.AllBuffered);
+                photonView.RPC("RPC_DisableMines", RpcTarget.AllBuffered);
+               
               
                currentWeapon = itemName;
                // Handle any additional weapon-related logic here

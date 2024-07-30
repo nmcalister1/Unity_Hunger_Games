@@ -60,6 +60,11 @@ MonoBehaviour:
   - ShowHealingEffect
   - RPC_ShowExplosionEffect
   - ShowExplosionEffectCoroutine
+  - RPC_EnableMines
+  - RPC_DisableMines
+  - RPC_DestroyLandMine
+  - RPC_DisableWeapon
+  - RPC_EnableWeapon
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

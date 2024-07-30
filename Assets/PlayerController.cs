@@ -21,6 +21,9 @@ namespace RPG.Character
 
 
         [SerializeField] private GameObject rocketLauncher;
+        [SerializeField] private GameObject mine;
+        public GameObject landMinePrefab;
+        public GameObject swordPrefab;
         public GameObject crosshair;
 
 
@@ -69,6 +72,11 @@ namespace RPG.Character
         public GameObject rocketProjectilePrefab;
         // public Transform projectileSpawnPoint;
         private int shotsRemaining = 3;
+        private int minesRemaining = 3;
+        private int swingsRemaining = 3;
+        private float swordSwingRadius = 3f; // Radius of the sword swing
+        private int swordDamage = 50;
+
 
 
 
@@ -118,6 +126,8 @@ namespace RPG.Character
             ToggleCrosshair();
             ShootLaserGun();
             ShootRocketLauncher();
+            UseLandMine();
+            UseSword();
         }
 
 
@@ -295,12 +305,11 @@ namespace RPG.Character
             inventory.PickUpItem(itemName); // Modify the Inventory script to handle this method
             photonView.RPC("RemoveItem", RpcTarget.AllBuffered, itemObject.GetComponent<PhotonView>().ViewID); // Remove item from all clients
 
-
-
-
             if (itemName == "LaserGun")
             {
                 shotsRemaining = 3; // Set the number of shots remaining
+                minesRemaining = 3;
+                swingsRemaining = 3;
                 EnableLaserGun();
                 photonView.RPC("RPC_EnableLaserGun", RpcTarget.AllBuffered);
             }
@@ -311,6 +320,8 @@ namespace RPG.Character
             if (itemName == "RocketLauncher")
             {
                 shotsRemaining = 3; // Set the number of shots remaining
+                minesRemaining = 3;
+                swingsRemaining = 3;
                 EnableRocketLauncher();
                 photonView.RPC("RPC_EnableRocketLauncher", RpcTarget.AllBuffered);
 
@@ -322,8 +333,10 @@ namespace RPG.Character
             if (itemName == "Mines")
             {
                 shotsRemaining = 3; // Set the number of shots remaining
-                                    // EnableMines();
-                                    // photonView.RPC("RPC_EnableMines", RpcTarget.AllBuffered);
+                minesRemaining = 3;
+                swingsRemaining = 3;
+                EnableMines();
+                photonView.RPC("RPC_EnableMines", RpcTarget.AllBuffered);
 
             }
 
@@ -333,8 +346,10 @@ namespace RPG.Character
             if (itemName == "Weapon")
             {
                 shotsRemaining = 3; // Set the number of shots remaining
-                                    // EnableWeapon();
-                                    // photonView.RPC("RPC_EnableWeapon", RpcTarget.AllBuffered);
+                minesRemaining = 3;
+                swingsRemaining = 3;
+                EnableWeapon();
+                photonView.RPC("RPC_EnableWeapon", RpcTarget.AllBuffered);
 
             }
         }
@@ -357,6 +372,41 @@ namespace RPG.Character
         private void RPC_EnableLaserGun()
         {
             EnableLaserGun();
+        }
+
+        private void EnableWeapon()
+        {
+            if (swordPrefab != null)
+            {
+                swordPrefab.SetActive(true);
+            }
+        }
+
+
+
+
+        [PunRPC]
+        private void RPC_EnableWeapon()
+        {
+            EnableWeapon();
+        }
+
+
+        private void EnableMines()
+        {
+            if (mine != null)
+            {
+                mine.SetActive(true);
+            }
+        }
+
+
+
+
+        [PunRPC]
+        private void RPC_EnableMines()
+        {
+            EnableMines();
         }
 
 
@@ -391,6 +441,78 @@ namespace RPG.Character
             {
                 Destroy(itemPV.gameObject); // Remove item from the scene
             }
+        }
+
+        private void UseLandMine()
+        {
+            if (inventory.currentWeapon != null && inventory.currentWeapon == "Mines" && Input.GetMouseButtonDown(0) && minesRemaining > 0)
+            {
+                Debug.Log("Land Mine activated!");
+                PlaceLandMine();
+            }
+        }
+
+        private void PlaceLandMine()
+        {
+            if (!photonView.IsMine) return;
+
+            // Get the position in front of the player to place the land mine
+            Vector3 minePosition = transform.position + transform.forward * 1.5f;
+            
+            // Instantiate the land mine using Photon
+            PhotonNetwork.Instantiate("Prefabs/LandMine Variant 1", minePosition, Quaternion.identity);
+
+            // Reduce the number of shots remaining
+            minesRemaining--;
+
+            // If no shots remaining, destroy the weapon and disable crosshair
+            if (minesRemaining <= 0)
+            {
+                DestroyWeapon();
+            }
+        }
+
+        private void UseSword()
+        {
+            if (inventory.currentWeapon != null && inventory.currentWeapon == "Weapon" && Input.GetMouseButtonDown(0) && swingsRemaining > 0)
+            {
+                Debug.Log("Sword activated!");
+
+                animator.SetTrigger("attack"); 
+                // Check for players in the swing radius
+                Collider[] hitColliders = Physics.OverlapSphere(transform.position, swordSwingRadius);
+                foreach (var hitCollider in hitColliders)
+                {
+                    if (hitCollider.CompareTag("Player"))
+                    {
+                        PhotonView targetPV = hitCollider.GetComponent<PhotonView>();
+                        if (targetPV != null && !targetPV.IsMine)
+                        {
+                            Debug.Log("Player in range: " + hitCollider.gameObject.name);
+                            // Apply damage to the player
+                            targetPV.RPC("TakeDamage", RpcTarget.All, swordDamage);
+                        }
+                    }
+                }
+
+                // Reduce the number of swings left
+                swingsRemaining--;
+
+                // Optionally, you can add logic to disable the sword or show a cooldown
+                if (swingsRemaining <= 0)
+                {
+                    // Handle out-of-swings logic
+                    StartCoroutine(DestroyWeaponWithDelay());
+                }
+                
+            }
+        }
+
+        // Coroutine to destroy the weapon after a 1-second delay
+        private IEnumerator DestroyWeaponWithDelay()
+        {
+            yield return new WaitForSeconds(0.7f);
+            DestroyWeapon();
         }
 
 
@@ -675,7 +797,7 @@ namespace RPG.Character
 
         private void ToggleCrosshair()
         {
-            if (inventory.currentWeapon != null && inventory.currentWeapon != "")
+            if (inventory.currentWeapon != null && inventory.currentWeapon != "" && inventory.currentWeapon != "Mines" && inventory.currentWeapon != "Weapon")
             {
                 crosshair.SetActive(true);
             }
@@ -700,7 +822,7 @@ namespace RPG.Character
         private void ShootLaserGun()
         {
             float projectileSpeed = 150f;
-            if (Input.GetMouseButtonDown(0) && inventory.currentWeapon == "LaserGun")
+            if (Input.GetMouseButtonDown(0) && inventory.currentWeapon == "LaserGun" && shotsRemaining > 0)
             {
 
 
@@ -785,7 +907,7 @@ namespace RPG.Character
         private void ShootRocketLauncher()
         {
             float projectileSpeed = 150f;
-            if (Input.GetMouseButtonDown(0) && inventory.currentWeapon == "RocketLauncher")
+            if (Input.GetMouseButtonDown(0) && inventory.currentWeapon == "RocketLauncher" && shotsRemaining > 0)
             {
 
 
@@ -909,8 +1031,17 @@ namespace RPG.Character
             DisableRocketLauncher();
         }
 
+        [PunRPC]
+        private void RPC_DisableMines()
+        {
+            DisableMines();
+        }
 
-
+        [PunRPC]
+        private void RPC_DisableWeapon()
+        {
+            DisableWeapon();
+        }
 
 
 
@@ -939,7 +1070,11 @@ namespace RPG.Character
             // For example: Destroy(gameObject);
             photonView.RPC("RPC_DisableLaserGun", RpcTarget.AllBuffered);
             photonView.RPC("RPC_DisableRocketLauncher", RpcTarget.AllBuffered);
+            photonView.RPC("RPC_DisableMines", RpcTarget.AllBuffered);
+            photonView.RPC("RPC_DisableWeapon", RpcTarget.AllBuffered);
             shotsRemaining = 3; // Reset the number of shots remaining
+            minesRemaining = 3;
+            swingsRemaining = 3;
         }
 
 
@@ -948,16 +1083,22 @@ namespace RPG.Character
         private void DisableLaserGun()
         {
             sciFiRifle.SetActive(false);
-
-
         }
 
-
+        private void DisableWeapon()
+        {
+            swordPrefab.SetActive(false);
+        }
 
 
         private void DisableRocketLauncher()
         {
             rocketLauncher.SetActive(false);
+        }
+
+        private void DisableMines()
+        {
+            mine.SetActive(false);
         }
 
 

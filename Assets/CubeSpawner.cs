@@ -13,6 +13,7 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
     public GameObject invisibilityCloakPrefab;
     public GameObject chickenPrefab;
     public GameObject minesPrefab;
+    public GameObject swordsPrefab;
     public float spawnInterval = 15f; // Time interval in seconds
     public Grid terrainGrid; // Reference to the terrain grid
 
@@ -35,19 +36,21 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
             rocketLauncherPrefab,
             invisibilityCloakPrefab,
             chickenPrefab,
-            minesPrefab
+            minesPrefab,
+            swordsPrefab
         };
 
         // Initialize the probabilities
         probabilities = new float[]
         {
-            0.12f, // fastFeetPrefab
-            0.12f, // lightningPrefab
-            0.12f, // laserGunPrefab
-            0.12f, // rocketLauncherPrefab
-            0.12f, // invisibilityCloakPrefab
-            chickenProbability, // chickenPrefab
-            0.12f  // minesPrefab
+            0.125f, // fastFeetPrefab
+            0.125f, // lightningPrefab
+            0.125f, // laserGunPrefab
+            0.125f, // rocketLauncherPrefab
+            0.125f, // invisibilityCloakPrefab
+            0.125f, // chickenPrefab
+            0.125f,  // minesPrefab
+            0.125f  // swordsPrefab
         };
 
         // Spawn the initial set of prefabs
