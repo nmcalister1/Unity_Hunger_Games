@@ -49,6 +49,30 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_MotionVectors
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_LightProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_LightmapParameters
+      value: 
+      objectReference: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
+    - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_ReflectionProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 2df0911923965449484bb97f4a48d000, type: 2}
@@ -63,6 +87,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
       propertyPath: m_TagString
       value: GroundTile
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: aebad3442fc2fe945add1d645e346e10, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

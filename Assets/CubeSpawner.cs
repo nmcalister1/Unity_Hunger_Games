@@ -15,17 +15,16 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
     public GameObject minesPrefab;
     public GameObject swordsPrefab;
     public float spawnInterval = 15f; // Time interval in seconds
-    public Grid terrainGrid; // Reference to the terrain grid
 
-    private List<Vector3> tilePositions = new List<Vector3>(); // List to store tile positions
+    private List<Vector3> spawnTilePositions = new List<Vector3>(); // List to store spawn tile positions
     private GameObject[] prefabs; // Array to store all prefabs
     private float[] probabilities; // Array to store probabilities
     private float chickenProbability = 0.16f; // Initial probability of chickenPrefab
 
     private void Start()
     {
-        // Collect all tile positions from all tilemaps in the terrain grid
-        CollectGameObjectPositions();
+        // Collect all positions of objects tagged as 'SpawnTile'
+        CollectSpawnTilePositions();
 
         // Initialize the array with all the prefabs
         prefabs = new GameObject[]
@@ -66,24 +65,18 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
         StartCoroutine(DecreaseChickenProbabilityRoutine());
     }
 
-    private void CollectGameObjectPositions()
+    private void CollectSpawnTilePositions()
     {
-        // Get all tilemaps in the terrain grid
-        Tilemap[] tilemaps = terrainGrid.GetComponentsInChildren<Tilemap>();
+        // Find all GameObjects with the tag 'SpawnTile'
+        GameObject[] spawnTiles = GameObject.FindGameObjectsWithTag("SpawnTile");
 
-        foreach (Tilemap tilemap in tilemaps)
+        foreach (GameObject spawnTile in spawnTiles)
         {
-            foreach (Transform child in tilemap.transform)
-            {
-                if (child.gameObject != null)
-                {
-                    Vector3 position = child.position;
-                    tilePositions.Add(position);
-                }
-            }
+            Vector3 position = spawnTile.transform.position;
+            spawnTilePositions.Add(position);
         }
 
-        Debug.Log($"Collected {tilePositions.Count} tile positions.");
+        Debug.Log($"Collected {spawnTilePositions.Count} spawn tile positions.");
     }
 
     private IEnumerator SpawnCubeRoutine()
@@ -121,19 +114,19 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
 
     private void SpawnCube()
     {
-        if (tilePositions.Count == 0)
+        if (spawnTilePositions.Count == 0)
         {
-            Debug.Log("No tiles available for spawning.");
+            Debug.Log("No spawn tiles available for spawning.");
             return;
         }
 
         // Choose a random position
-        Vector3 randomPosition = tilePositions[Random.Range(0, tilePositions.Count)];
+        Vector3 randomPosition = spawnTilePositions[Random.Range(0, spawnTilePositions.Count)];
 
         // Choose a random prefab based on probabilities
         GameObject prefabToSpawn = ChoosePrefab();
 
-        // Offset the spawn position to sit on top of the GameObject, accounting for cube height
+        // Offset the spawn position to sit on top of the tile, accounting for cube height
         Vector3 spawnPosition = randomPosition + new Vector3(0, 1.5f, 0);
 
         // Use PhotonNetwork.Instantiate to spawn the prefab

@@ -16,6 +16,7 @@ TagManager:
   - Chicken
   - Mines
   - Sword
+  - SpawnTile
   layers:
   - Default
   - TransparentFX

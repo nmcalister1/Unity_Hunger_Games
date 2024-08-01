@@ -11,7 +11,7 @@ namespace RPG.Character
     public class PlayerController : MonoBehaviourPunCallbacks
     {
         [SerializeField] private GameObject cameraHolder;
-        [SerializeField] private float mouseSensitivity = 2f, walkSpeed = 4f, jumpForce = 5f, smoothTime = 0.1f, sprintSpeed = 6f;
+        [SerializeField] private float mouseSensitivity = 2f, walkSpeed = 4f, jumpForce = 5f, smoothTime = 0.1f, sprintSpeed = 5f;
         [SerializeField] private GameObject fastFeetEffectPrefab; // Reference to the Fast Feet effect prefab
         [SerializeField] private GameObject lightningEffectPrefab; // Reference to the Lightning effect prefab
         [SerializeField] private GameObject healingEffectPrefab; // Reference to the Invisibility effect prefab
@@ -555,7 +555,7 @@ namespace RPG.Character
 
 
 
-            walkSpeed = 6f; // Increase speed to 6
+            walkSpeed = 7.5f; // Increase speed to 6
             StartCoroutine(DeactivateFastFeetEffectAfterDelay(10f));
         }
 
