@@ -1,10 +1,20 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public class SetCharacterOpacity : MonoBehaviour
 {
     public GameObject kaykitAnimatedCharacter; // Reference to the kaykit animated character
     public TMP_Text invisibilityMessage;
+
+    private class MaterialState
+    {
+        public float OriginalAlpha;
+        public int OriginalDstBlend;
+        public bool IsAlphaBlendEnabled;
+    }
+
+    private Dictionary<Material, MaterialState> originalMaterialStates = new Dictionary<Material, MaterialState>();
 
     public void SetOpacity()
     {
@@ -51,7 +61,30 @@ public class SetCharacterOpacity : MonoBehaviour
         {
             foreach (Material mat in meshRenderer.materials)
             {
-                mat.SetInt("_ZWrite", 0);
+                if (!originalMaterialStates.ContainsKey(mat))
+                {
+                    // Store the original material state
+                    originalMaterialStates[mat] = new MaterialState
+                    {
+                        OriginalAlpha = mat.color.a,
+                        OriginalDstBlend = mat.GetInt("_DstBlend"),
+                        IsAlphaBlendEnabled = mat.IsKeywordEnabled("_ALPHABLEND_ON")
+                    };
+                }
+                // Enable transparency
+                //mat.SetOverrideTag("RenderType", "Transparent");
+                //mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                //mat.SetInt("_ZWrite", 0);
+                //mat.DisableKeyword("_ALPHATEST_ON");
+                mat.EnableKeyword("_ALPHABLEND_ON");
+                //mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                //mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+                // Set the alpha value to 0.5 (50% opacity)
+                Color color = mat.color;
+                color.a = 0.5f;
+                mat.color = color;
             }
         }
     }
@@ -62,7 +95,26 @@ public class SetCharacterOpacity : MonoBehaviour
         {
             foreach (Material mat in meshRenderer.materials)
             {
-                mat.SetInt("_ZWrite", 1); // Enable ZWrite
+                if (originalMaterialStates.ContainsKey(mat))
+                {
+                    // Restore the original material state
+                    MaterialState state = originalMaterialStates[mat];
+                    
+                    Color color = mat.color;
+                    color.a = state.OriginalAlpha;
+                    mat.color = color;
+
+                    mat.SetInt("_DstBlend", state.OriginalDstBlend);
+
+                    if (state.IsAlphaBlendEnabled)
+                    {
+                        mat.EnableKeyword("_ALPHABLEND_ON");
+                    }
+                    else
+                    {
+                        mat.DisableKeyword("_ALPHABLEND_ON");
+                    }
+                }
             }
         }
     }

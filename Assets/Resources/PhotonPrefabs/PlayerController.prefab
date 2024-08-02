@@ -155,6 +155,7 @@ MonoBehaviour:
   landMinePrefab: {fileID: 6230188407846640569, guid: 236bbcd3a10b9e6d49b9938ce5f91194, type: 3}
   swordPrefab: {fileID: 7971104632167925940}
   crosshair: {fileID: 6817905395830304556}
+  crosshairSpawnPoint: {fileID: 1223852282839589082}
   recoilForce: 10
   playerCamera: {fileID: 6717928846810674137}
   laserProjectilePrefab: {fileID: 1287329662165732898, guid: 43f91e22d2268c4fdab39de7cc3e76b3, type: 3}

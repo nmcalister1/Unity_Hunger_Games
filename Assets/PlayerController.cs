@@ -25,6 +25,7 @@ namespace RPG.Character
         public GameObject landMinePrefab;
         public GameObject swordPrefab;
         public GameObject crosshair;
+        public Transform crosshairSpawnPoint;
 
 
 
@@ -64,6 +65,7 @@ namespace RPG.Character
 
         private float originalSpeed; // Store the original walking speed
         private bool isInvisible; // To keep track of the invisibility state
+        private bool isFastFeetActive; // To keep track of the fast feet state
 
 
 
@@ -525,61 +527,47 @@ namespace RPG.Character
                 Debug.Log("Fast feet activated!");
                 inventory.ResetInventory(); // Reset the inventory
 
-
-
-
-                // If there's an ongoing fast feet effect, stop it
-                if (fastFeetCoroutine != null)
-                {
-                    StopCoroutine(fastFeetCoroutine);
-                    walkSpeed = originalSpeed; // Ensure the speed is reset immediately
-                }
-
-
-
-
                 // Start a new fast feet effect
-                PV.RPC("ActivateFastFeetEffect", RpcTarget.All);
+                PV.RPC("ActivateFastFeetEffect", RpcTarget.AllBuffered);
             }
         }
-
-
-
 
         [PunRPC]
         private void ActivateFastFeetEffect()
         {
-            if (currentEffect != null) Destroy(currentEffect); // Remove existing effect if any
-            currentEffect = Instantiate(fastFeetEffectPrefab, transform.position, Quaternion.identity, transform); // Attach to player
+            // If there's an ongoing fast feet effect, stop it
+            if (isFastFeetActive && fastFeetCoroutine != null)
+            {
+                StopCoroutine(fastFeetCoroutine);
+                DeactivateFastFeetEffectWithoutDelay();
+            }
 
+            // Set the fast feet state to true and instantiate the effect
+            isFastFeetActive = true;
+            if (currentEffect != null) Destroy(currentEffect);
+            currentEffect = Instantiate(fastFeetEffectPrefab, transform.position, Quaternion.identity, transform);
 
-
-
-            walkSpeed = 7.5f; // Increase speed to 6
-            StartCoroutine(DeactivateFastFeetEffectAfterDelay(10f));
+            // Increase speed and start the coroutine to deactivate after delay
+            walkSpeed = 7.5f;
+            fastFeetCoroutine = StartCoroutine(DeactivateFastFeetEffectAfterDelay(10f));
         }
-
-
-
 
         private IEnumerator DeactivateFastFeetEffectAfterDelay(float delay)
         {
             yield return new WaitForSeconds(delay);
 
-
-
-
-            // Reset speed to original value
-            walkSpeed = originalSpeed;
-
-
-
-
-            // Remove the effect after delay
-            Destroy(currentEffect);
-            fastFeetCoroutine = null; // Reset the coroutine reference
+            PV.RPC("DeactivateFastFeetEffectWithoutDelay", RpcTarget.AllBuffered);
         }
 
+        [PunRPC]
+        private void DeactivateFastFeetEffectWithoutDelay()
+        {
+            isFastFeetActive = false;
+
+            // Reset speed to original value and remove the effect
+            walkSpeed = originalSpeed;
+            if (currentEffect != null) Destroy(currentEffect);
+        }
 
 
 
@@ -604,7 +592,7 @@ namespace RPG.Character
 
 
             // Detect all players within the 10-block radius
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 10f);
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 20f);
             foreach (var hitCollider in hitColliders)
             {
                 PlayerController player = hitCollider.GetComponent<PlayerController>();
@@ -897,6 +885,43 @@ namespace RPG.Character
                     {
                         DestroyWeapon();
                     }
+                     // Use the assigned camera to get the shoot direction
+                    // Use the assigned camera to get the shoot direction
+                    // Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+                    // Vector3 shootDirection = ray.direction;
+
+                    // Debug.DrawRay(ray.origin, ray.direction * 10, Color.red, 2f);
+
+                    // // Set the spawn position to the middle of the crosshair
+                    // Vector3 spawnPosition = crosshairSpawnPoint.position;
+
+                    // // Calculate the rotation to align with the shoot direction
+                    // Quaternion rotation = Quaternion.LookRotation(shootDirection);
+
+                    // GameObject laserProjectile = PhotonNetwork.Instantiate("Prefabs/SingleLine-LightSaber Variant", spawnPosition, rotation);
+
+                    // PhotonView projectilePV = laserProjectile.GetComponent<PhotonView>();
+                    // Rigidbody projectileRb = laserProjectile.GetComponent<Rigidbody>();
+
+                    // if (projectileRb != null)
+                    // {
+                    //     projectileRb.velocity = shootDirection * projectileSpeed;
+
+                    //     // Synchronize the projectile's velocity across all clients
+                    //     projectilePV.RPC("RPC_SetVelocity", RpcTarget.AllBuffered, projectileRb.velocity);
+                    // }
+
+                    // // Start coroutine to destroy the projectile after 5 seconds
+                    // StartCoroutine(DestroyProjectileAfterDelay(laserProjectile, 5f));
+
+                    // // Reduce the number of shots remaining
+                    // shotsRemaining--;
+
+                    // // If no shots remaining, destroy the weapon and disable crosshair
+                    // if (shotsRemaining <= 0)
+                    // {
+                    //     DestroyWeapon();
+                    // }
                 }
             }
         }

@@ -17,6 +17,7 @@ TagManager:
   - Mines
   - Sword
   - SpawnTile
+  - SpawnCloak
   layers:
   - Default
   - TransparentFX
