@@ -708,8 +708,9 @@ namespace RPG.Character
             SetCharacterOpacity setOpacityScript = GetComponent<SetCharacterOpacity>();
             if (setOpacityScript != null)
             {
-                setOpacityScript.SetOpacity();
+                setOpacityScript.ShowInvisibilityMessage();
             }
+            //PV.RPC("SetOpacity", RpcTarget.AllBuffered);
 
 
 
@@ -754,12 +755,14 @@ namespace RPG.Character
 
 
 
-            // Reset local player opacity to 100%
-            SetCharacterOpacity setOpacityScript = GetComponent<SetCharacterOpacity>();
-            if (setOpacityScript != null)
-            {
-                setOpacityScript.ResetOpacity();
-            }
+            //Reset local player opacity to 100%
+            //SetCharacterOpacity setOpacityScript = GetComponent<SetCharacterOpacity>();
+            // if (setOpacityScript != null)
+            // {
+            //     setOpacityScript.ResetOpacity();
+            // }
+
+            //PV.RPC("ResetOpacity", RpcTarget.AllBuffered);
 
 
 
@@ -885,43 +888,6 @@ namespace RPG.Character
                     {
                         DestroyWeapon();
                     }
-                     // Use the assigned camera to get the shoot direction
-                    // Use the assigned camera to get the shoot direction
-                    // Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-                    // Vector3 shootDirection = ray.direction;
-
-                    // Debug.DrawRay(ray.origin, ray.direction * 10, Color.red, 2f);
-
-                    // // Set the spawn position to the middle of the crosshair
-                    // Vector3 spawnPosition = crosshairSpawnPoint.position;
-
-                    // // Calculate the rotation to align with the shoot direction
-                    // Quaternion rotation = Quaternion.LookRotation(shootDirection);
-
-                    // GameObject laserProjectile = PhotonNetwork.Instantiate("Prefabs/SingleLine-LightSaber Variant", spawnPosition, rotation);
-
-                    // PhotonView projectilePV = laserProjectile.GetComponent<PhotonView>();
-                    // Rigidbody projectileRb = laserProjectile.GetComponent<Rigidbody>();
-
-                    // if (projectileRb != null)
-                    // {
-                    //     projectileRb.velocity = shootDirection * projectileSpeed;
-
-                    //     // Synchronize the projectile's velocity across all clients
-                    //     projectilePV.RPC("RPC_SetVelocity", RpcTarget.AllBuffered, projectileRb.velocity);
-                    // }
-
-                    // // Start coroutine to destroy the projectile after 5 seconds
-                    // StartCoroutine(DestroyProjectileAfterDelay(laserProjectile, 5f));
-
-                    // // Reduce the number of shots remaining
-                    // shotsRemaining--;
-
-                    // // If no shots remaining, destroy the weapon and disable crosshair
-                    // if (shotsRemaining <= 0)
-                    // {
-                    //     DestroyWeapon();
-                    // }
                 }
             }
         }
