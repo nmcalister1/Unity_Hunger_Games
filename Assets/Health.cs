@@ -11,10 +11,14 @@ namespace RPG.Character
         [SerializeField] private int maxHealth = 100;
         [NonSerialized] public int currentHealth;
 
+        private PlayerUIManager playerUIManager;
+
         void Awake()
         {
             currentHealth = maxHealth;
+            playerUIManager = GetComponent<PlayerUIManager>();
         }
+
 
         public void TakeDamage(int damage)
         {

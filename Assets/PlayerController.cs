@@ -79,6 +79,8 @@ namespace RPG.Character
         private float swordSwingRadius = 3f; // Radius of the sword swing
         private int swordDamage = 50;
 
+        private PlayerUIManager playerUIManager;
+
 
 
 
@@ -95,6 +97,7 @@ namespace RPG.Character
             animator = GetComponentInChildren<Animator>();
             health = GetComponent<Health>(); // Get the Health component
             inventory = GetComponent<Inventory>(); // Get the Inventory component
+            playerUIManager = GetComponent<PlayerUIManager>();
             originalSpeed = walkSpeed; // Store the original walking speed
 
         }
@@ -211,6 +214,13 @@ namespace RPG.Character
             {
                 // Reduce the player's health
                 health.currentHealth -= damage;
+
+                health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
+
+                playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
+
+                //photonView.RPC("RPC_UpdateHealth", RpcTarget.All, health.currentHealth);
+
                 if (health.currentHealth <= 0)
                 {
                     // Handle player death
@@ -667,6 +677,10 @@ namespace RPG.Character
         private void IncreaseHealth(int amount)
         {
             health.currentHealth = Mathf.Min(health.currentHealth + amount, 100);
+
+            playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
+
+            //photonView.RPC("RPC_UpdateHealth", RpcTarget.All, photonView.Owner.ActorNumber, health.currentHealth);
             Debug.Log($"Health increased by {amount}. Current health: {health.currentHealth}");
         }
 

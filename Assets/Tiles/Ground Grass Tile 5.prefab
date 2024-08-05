@@ -141,4 +141,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0676d01f3300b645aa8d3596cb64f07b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  invisibilityCloakPrefab: {fileID: 4491078920155804234, guid: 2693a2c14ed2e3a40b5e913d0fc3125f, type: 3}
+  invisibilityCloakPrefab: {fileID: 3288352066536671832, guid: 192b0e14df282b09d837949178bba9c2, type: 3}

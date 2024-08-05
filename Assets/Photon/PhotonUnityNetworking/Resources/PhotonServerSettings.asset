@@ -68,6 +68,8 @@ MonoBehaviour:
   - DeactivateFastFeetEffectWithoutDelay
   - SetOpacity
   - ResetOpacity
+  - RPC_UpdateHealth
+  - UpdateHealth
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
