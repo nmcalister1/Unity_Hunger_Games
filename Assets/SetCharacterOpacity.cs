@@ -8,6 +8,7 @@ using Photon.Pun;
     {
         //public GameObject kaykitAnimatedCharacter; // Reference to the kaykit animated character
         public TMP_Text invisibilityMessage;
+        public TMP_Text visibleMessage;
 
         // private class MaterialState
         // {
@@ -140,6 +141,23 @@ using Photon.Pun;
             if (invisibilityMessage != null)
             {
                 invisibilityMessage.gameObject.SetActive(false); // Hide the message
+            }
+        }
+
+        public void ShowVisibleMessage()
+        {
+            if (visibleMessage != null)
+            {
+                visibleMessage.gameObject.SetActive(true); // Show the message
+                Invoke("HideVisibleMessage", 2f); // Hide the message after 2 seconds
+            }
+        }
+
+        private void HideVisibleMessage()
+        {
+            if (visibleMessage != null)
+            {
+                visibleMessage.gameObject.SetActive(false); // Hide the message
             }
         }
 

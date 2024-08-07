@@ -204,29 +204,50 @@ namespace RPG.Character
         //     }
         // }
 
+        
 
 
+        // [PunRPC]
+        // private void RPC_UpdateHealth(int viewID, int Health)
+        // {
+        //     PhotonView target = PhotonView.Find(viewID);
+        //     if (target != null)
+        //     {
+        //         Health targetHealth = target.GetComponent<Health>();
+        //         if (targetHealth != null)
+        //         {
+        //             targetHealth.UpdateHealthUI(Health);
+        //         }
+        //     }
+        // }
 
         [PunRPC]
         public void TakeDamage(int damage)
         {
-            if (PV.IsMine)
+            //if (!PV.IsMine) return;
+
+            // Reduce the player's health
+            health.currentHealth -= damage;
+
+            health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
+
+            // Log the updated health value
+            //Debug.Log($"[TakeDamage] Player {photonView.Owner.ActorNumber} new health: {health.currentHealth}");
+
+            //playerUIManager.UpdatePlayerHealth(photonView.ViewID, health.currentHealth);
+            //photonView.RPC("RPC_UpdateHealth", RpcTarget.All, photonView.ViewID, health.currentHealth);
+
+            //playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
+            photonView.RPC("UpdatePlayerHealth", RpcTarget.All, photonView.Owner.ActorNumber, (float)health.currentHealth);
+            //playerUIManager.UpdateAllPlayersHealthBars();
+            
+
+            if (health.currentHealth <= 0)
             {
-                // Reduce the player's health
-                health.currentHealth -= damage;
-
-                health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
-
-                playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
-
-                //photonView.RPC("RPC_UpdateHealth", RpcTarget.All, health.currentHealth);
-
-                if (health.currentHealth <= 0)
-                {
-                    // Handle player death
-                    Die();
-                }
+                // Handle player death
+                Die();
             }
+            
         }
 
 
@@ -238,8 +259,18 @@ namespace RPG.Character
             Debug.Log("Player has died!");
 
             // Call RPC to hide the player for all clients
+            //StartCoroutine(WaitAndHidePlayer());
+            health.SyncHealthHealth();
             photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
         }
+
+        // private IEnumerator WaitAndHidePlayer()
+        // {
+        //     yield return new WaitForSeconds(0.5f);
+
+        //     // Call RPC to hide the player for all clients
+        //     photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
+        // }
 
         [PunRPC]
         private void RPC_HidePlayer()
@@ -677,8 +708,9 @@ namespace RPG.Character
         private void IncreaseHealth(int amount)
         {
             health.currentHealth = Mathf.Min(health.currentHealth + amount, 100);
+            photonView.RPC("UpdatePlayerHealth", RpcTarget.All, photonView.Owner.ActorNumber, (float)health.currentHealth);
 
-            playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
+            //playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
 
             //photonView.RPC("RPC_UpdateHealth", RpcTarget.All, photonView.Owner.ActorNumber, health.currentHealth);
             Debug.Log($"Health increased by {amount}. Current health: {health.currentHealth}");
@@ -753,6 +785,12 @@ namespace RPG.Character
             yield return new WaitForSeconds(delay);
 
 
+            SetCharacterOpacity setOpacityScript = GetComponent<SetCharacterOpacity>();
+
+            if (setOpacityScript != null)
+            {
+                setOpacityScript.ShowVisibleMessage();
+            }
 
 
             PV.RPC("DeactivateInvisibilityEffectWithoutDelay", RpcTarget.AllBuffered);
@@ -1012,9 +1050,25 @@ namespace RPG.Character
         private IEnumerator DestroyProjectileAfterDelay(GameObject projectile, float delay)
         {
             yield return new WaitForSeconds(delay);
+            // if (projectile != null)
+            // {
+            //     PhotonNetwork.Destroy(projectile);
+            // }
+            // if(projectile != null && (projectile.GetComponent<PhotonView>().IsMine || PhotonNetwork.IsMasterClient))
+            // {
+            //     PhotonNetwork.Destroy(projectile);
+            // }
             if (projectile != null)
             {
-                PhotonNetwork.Destroy(projectile);
+                PhotonView projectilePV = projectile.GetComponent<PhotonView>();
+
+                Debug.Log($"DestroyProjectileAfterDelay called by: {PhotonNetwork.NickName}, IsMine: {projectilePV.IsMine}, IsMasterClient: {PhotonNetwork.IsMasterClient}");
+
+                if (projectilePV.IsMine || PhotonNetwork.IsMasterClient)
+                {
+                    Debug.Log($"Destroying projectile after delay by: {PhotonNetwork.NickName}, IsMine: {projectilePV.IsMine}, IsMasterClient: {PhotonNetwork.IsMasterClient}");
+                    PhotonNetwork.Destroy(projectile);
+                }
             }
         }
 

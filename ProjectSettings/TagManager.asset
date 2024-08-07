@@ -18,6 +18,7 @@ TagManager:
   - Sword
   - SpawnTile
   - SpawnCloak
+  - HealthGroup
   layers:
   - Default
   - TransparentFX

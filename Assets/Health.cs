@@ -11,12 +11,43 @@ namespace RPG.Character
         [SerializeField] private int maxHealth = 100;
         [NonSerialized] public int currentHealth;
 
-        private PlayerUIManager playerUIManager;
+        private float syncInterval = 0.2f;
+        private float nextSyncTime = 0f;
+
+       
+
+        //private PlayerUIManager playerUIManager;
 
         void Awake()
         {
             currentHealth = maxHealth;
-            playerUIManager = GetComponent<PlayerUIManager>();
+            //playerUIManager = GetComponent<PlayerUIManager>();
+        }
+
+        // public void UpdateHealthUI(int Health)
+        // {
+        //     playerUIManager.UpdatePlayerHealth(photonView.ViewID, Health);
+        // }
+
+         private void Update()
+        {
+            if (Time.time >= nextSyncTime)
+            {
+                SyncHealthHealth();
+                nextSyncTime = Time.time + syncInterval;
+            }
+        }
+
+        public void SyncHealthHealth()
+        {
+            if (photonView.IsMine)
+            {
+                PlayerUIManager playerUIManager = FindObjectOfType<PlayerUIManager>();
+                if (playerUIManager != null)
+                {
+                    playerUIManager.SyncHealth(photonView.OwnerActorNr, currentHealth);
+                }
+            }
         }
 
 
@@ -54,5 +85,17 @@ namespace RPG.Character
         {
             return currentHealth;
         }
+
+        // public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        // {
+        //     if (stream.IsWriting)
+        //     {
+        //         stream.SendNext(currentHealth);
+        //     }
+        //     else
+        //     {
+        //         currentHealth = (int)stream.ReceiveNext();
+        //     }
+        // }
     }
 }

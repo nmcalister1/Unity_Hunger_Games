@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using System.IO;
+using RPG.Character;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -41,5 +42,18 @@ public class PlayerManager : MonoBehaviour
         }
 
         PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), spawnPosition, Quaternion.identity);
+
+        // Set the TagObject to the Health component for the player
+        // Health healthComponent = playerController.GetComponent<Health>();
+        // if (healthComponent == null)
+        // {
+        //     Debug.LogError("Health component is missing on PlayerController prefab.");
+        // }
+        // else
+        // {
+        //     Photon.Realtime.Player player = PhotonNetwork.LocalPlayer;
+        //     player.TagObject = healthComponent;
+        //     Debug.Log("Health component set for player: " + player.NickName);
+        // }
     }
 }

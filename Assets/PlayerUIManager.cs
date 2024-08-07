@@ -1,46 +1,75 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using Photon.Pun;
 using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+using Photon.Realtime;
+using RPG.Character;
 
-namespace RPG.Character
+public class PlayerUIManager : MonoBehaviourPunCallbacks
 {
-    public class PlayerUIManager : MonoBehaviourPunCallbacks
+    public GameObject healthPanel;
+    private Dictionary<int, PlayerUI> playerUIs = new Dictionary<int, PlayerUI>();
+
+    private void Start()
     {
-        public GameObject healthPanelPrefab;
-        public Transform playerListContainer;
-        private Dictionary<int, PlayerUI> playerUIs = new Dictionary<int, PlayerUI>();
-
-        private void Start()
+        if (PhotonNetwork.IsConnected)
         {
-            if (PhotonNetwork.IsConnected)
+            foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
             {
-                foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
-                {
-                    CreatePlayerUI(player);
-                }
+                CreatePlayerUI(player);
             }
         }
-
-        private void CreatePlayerUI(Photon.Realtime.Player player)
-        {
-            GameObject uiInstance = Instantiate(healthPanelPrefab, playerListContainer);
-            //GameObject uiInstance = PhotonNetwork.Instantiate(healthPanelPrefab.name, playerListContainer.position, Quaternion.identity);
-            Debug.Log("UI Instance: " + uiInstance);
-            PlayerUI playerUI = uiInstance.GetComponent<PlayerUI>();
-            playerUI.SetPlayer(player);
-            playerUIs[player.ActorNumber] = playerUI;
-        }
-
-        public void UpdatePlayerHealth(int playerID, int health)
-        {
-            if (playerUIs.TryGetValue(playerID, out PlayerUI playerUI))
-            {
-                Debug.Log("Calling update health method");
-                playerUI.photonView.RPC("UpdateHealth", RpcTarget.All, health);
-            }
-        }
-
     }
+
+    private void CreatePlayerUI(Photon.Realtime.Player player)
+    {
+        // Find all HealthGroups within the health panel
+        PlayerUI[] healthGroups = healthPanel.GetComponentsInChildren<PlayerUI>(true);
+
+        // Counter for the number of active health groups
+        int activeHealthGroups = 0;
+
+        // Find the next available HealthGroup
+        foreach (var healthGroup in healthGroups)
+        {
+            if (healthGroup.gameObject.activeSelf)
+            {
+                activeHealthGroups++;
+            }
+            else if (!healthGroup.gameObject.activeSelf && activeHealthGroups < PhotonNetwork.PlayerList.Length)
+            {
+                healthGroup.gameObject.SetActive(true);
+                healthGroup.SetPlayer(player);
+                playerUIs[player.ActorNumber] = healthGroup;
+                activeHealthGroups++;
+                break;
+            }
+        }
+    }
+
+    [PunRPC]
+    public void UpdatePlayerHealth(int playerID, float health)
+    {
+        if (playerUIs.TryGetValue(playerID, out PlayerUI playerUI))
+        {
+            if (playerUI == null)
+            {
+                Debug.Log("PlayerUI is null, skipping update.");
+                return;
+            }
+            playerUI.photonView.RPC("UpdateHealth", RpcTarget.All, health);
+        }
+        else 
+        {
+            Debug.Log("No player UI value");
+        }
+    } 
+
+    // Call this method to update health across the network
+    public void SyncHealth(int playerID, float health)
+    {
+        photonView.RPC("UpdatePlayerHealth", RpcTarget.All, playerID, health);
+    }
+
+    
 }
+
