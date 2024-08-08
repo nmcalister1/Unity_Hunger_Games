@@ -81,6 +81,9 @@ namespace RPG.Character
 
         private PlayerUIManager playerUIManager;
 
+        private int ownerNumber;
+        private List<int> playerActorNumbers = new List<int>();
+
 
 
 
@@ -99,6 +102,7 @@ namespace RPG.Character
             inventory = GetComponent<Inventory>(); // Get the Inventory component
             playerUIManager = GetComponent<PlayerUIManager>();
             originalSpeed = walkSpeed; // Store the original walking speed
+            ownerNumber = 1;
 
         }
 
@@ -111,7 +115,31 @@ namespace RPG.Character
             {
                 Destroy(GetComponentInChildren<Camera>().gameObject);
                 Destroy(rb);
+                
             }
+            else 
+            {
+                StartCoroutine(DecreaseHealthPeriodically());
+            }
+
+            // Store all player ActorNumbers in the list
+            // foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
+            // {
+            //     playerActorNumbers.Add(player.ActorNumber);
+            //     Debug.Log("Added Player ActorNumber: " + player.ActorNumber);
+            // }
+
+            //Debug.Log(PV.Owner.ActorNumber);    
+            
+            // if (PV.Owner.ActorNumber == ownerNumber)
+            // {
+            //     Debug.Log("Player 1 implementing decrease health coroutine");
+                
+            // }
+
+            
+
+            
         }
 
 
@@ -133,7 +161,47 @@ namespace RPG.Character
             ShootRocketLauncher();
             UseLandMine();
             UseSword();
+
+            //CheckActorNumber();
+
         }
+
+        // private void CheckActorNumber()
+        // {
+        //     List<int> currentActorNumbers = new List<int>();
+
+        //     // Add the current actor numbers from the player list
+        //     foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
+        //     {
+        //         currentActorNumbers.Add(player.ActorNumber);
+        //         Debug.Log("Current Player ActorNumber: " + player.ActorNumber);
+        //     }
+
+        //     // Remove actors that are not in the current player list
+        //     playerActorNumbers.RemoveAll(actorNumber => !currentActorNumbers.Contains(actorNumber));
+
+        //     // Debug the updated player actor numbers list
+        //     Debug.Log("Updated Player ActorNumbers: " + string.Join(", ", playerActorNumbers));
+
+        //     // If the current owner is not in the list, choose a new owner
+        //     if (!playerActorNumbers.Contains(ownerNumber))
+        //     {
+        //         if (playerActorNumbers.Count > 0)
+        //         {
+        //             // Select the first actor number from the list as the new owner
+        //             ownerNumber = playerActorNumbers[0];
+        //             Debug.Log("New OwnerNumber selected: " + ownerNumber);
+        //         }
+        //         else
+        //         {
+        //             Debug.LogWarning("No valid player actor numbers found.");
+        //             ownerNumber = -1; // No valid owner
+        //         }
+        //     }
+
+        //     Debug.Log("Current OwnerNumber: " + ownerNumber);
+        // }
+
 
 
 
@@ -193,34 +261,6 @@ namespace RPG.Character
 
 
 
-
-        // private void Attack()
-        // {
-        //     if (Input.GetMouseButtonDown(0)) // Left mouse button
-        //     {
-        //         Debug.Log("Player attacked!"); // Debug message for attack
-        //         animator.SetTrigger("Attack"); // Trigger attack animation
-        //         // Add attack logic here (e.g., detecting hit, dealing damage)
-        //     }
-        // }
-
-        
-
-
-        // [PunRPC]
-        // private void RPC_UpdateHealth(int viewID, int Health)
-        // {
-        //     PhotonView target = PhotonView.Find(viewID);
-        //     if (target != null)
-        //     {
-        //         Health targetHealth = target.GetComponent<Health>();
-        //         if (targetHealth != null)
-        //         {
-        //             targetHealth.UpdateHealthUI(Health);
-        //         }
-        //     }
-        // }
-
         [PunRPC]
         public void TakeDamage(int damage)
         {
@@ -231,16 +271,8 @@ namespace RPG.Character
 
             health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
 
-            // Log the updated health value
-            //Debug.Log($"[TakeDamage] Player {photonView.Owner.ActorNumber} new health: {health.currentHealth}");
-
-            //playerUIManager.UpdatePlayerHealth(photonView.ViewID, health.currentHealth);
-            //photonView.RPC("RPC_UpdateHealth", RpcTarget.All, photonView.ViewID, health.currentHealth);
-
-            //playerUIManager.UpdatePlayerHealth(photonView.Owner.ActorNumber, health.currentHealth);
-            photonView.RPC("UpdatePlayerHealth", RpcTarget.All, photonView.Owner.ActorNumber, (float)health.currentHealth);
-            //playerUIManager.UpdateAllPlayersHealthBars();
-            
+            //health.SyncHealthHealth();
+            //photonView.RPC("UpdatePlayerHealth", RpcTarget.All, photonView.Owner.ActorNumber, (float)health.currentHealth);    
 
             if (health.currentHealth <= 0)
             {
@@ -249,6 +281,70 @@ namespace RPG.Character
             }
             
         }
+
+        private IEnumerator DecreaseHealthPeriodically()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(10f);
+                DecreaseAllPlayersHealth();
+            }
+        }
+
+        private void DecreaseAllPlayersHealth()
+        {
+            photonView.RPC("TakeDamage", RpcTarget.AllBuffered, 5);
+            // health.currentHealth -= 5;
+
+            // health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
+ 
+
+            // if (health.currentHealth <= 0)
+            // {
+            //     // Handle player death
+            //     Die();
+            // }
+            // if (playerUIManager != null)
+            // {
+            //     //playerUIManager.SyncHealth(photonView.OwnerActorNr, (float)currentHealth);
+            //     foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
+            //     {
+            //         GameObject playerObject = GetPlayerObjects(player.ActorNumber);
+            //         if (playerObject != null && playerObject.TryGetComponent(out Health playerHealth))
+            //         {
+            //             //playerHealth.photonView.RPC("HealthTakeDamage", RpcTarget.All, 10);
+
+            //             playerHealth.currentHealth -= 5;
+            //             playerHealth.currentHealth = Mathf.Clamp(playerHealth.currentHealth, 0, 100);
+            //             playerUIManager.SyncHealth(player.ActorNumber, playerHealth.currentHealth);
+
+            //             if (playerHealth.currentHealth <= 0)
+            //             {
+            //                 playerHealth.DieHealth();
+            //             }
+            //         }
+            //         else
+            //         {
+            //             Debug.LogError("Player with actor number " + player.ActorNumber + " does not have a Health component or the player object is null.");
+            //         }
+            //     }
+            // }
+           
+        }
+
+        // Method to find the player object based on ActorNumber
+        // private GameObject GetPlayerObjects(int actorNumber)
+        // {
+        //     foreach (var player in FindObjectsOfType<PlayerController>())
+        //     {
+        //         if (player.photonView.OwnerActorNr == actorNumber)
+        //         {
+        //             return player.gameObject;
+        //         }
+        //     }
+        //     return null;
+        // }
+
 
 
 
@@ -259,24 +355,35 @@ namespace RPG.Character
             Debug.Log("Player has died!");
 
             // Call RPC to hide the player for all clients
-            //StartCoroutine(WaitAndHidePlayer());
-            health.SyncHealthHealth();
+            StartCoroutine(WaitAndHidePlayer());
+            //health.SyncHealthHealth();
+            //photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
+        }
+
+        private IEnumerator WaitAndHidePlayer()
+        {
+            yield return new WaitForSeconds(.1f);
             photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
         }
 
-        // private IEnumerator WaitAndHidePlayer()
-        // {
-        //     yield return new WaitForSeconds(0.5f);
+        private void Die(int playerID)
+        {
+            PhotonView playerView = PhotonView.Find(playerID);
+            if (playerView != null && playerView.TryGetComponent(out PlayerController playerController))
+            {
+                health.SyncHealthHealth();
+                playerController.photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
+            }
+        }
 
-        //     // Call RPC to hide the player for all clients
-        //     photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
-        // }
 
         [PunRPC]
         private void RPC_HidePlayer()
         {
             // Hide the player by disabling the game object
             gameObject.SetActive(false);
+            // PhotonNetwork.Destroy(gameObject);
+            // PhotonNetwork.LeaveRoom();
         }
 
 

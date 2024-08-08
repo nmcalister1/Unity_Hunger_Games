@@ -11,8 +11,7 @@ namespace RPG.Character
         [SerializeField] private int maxHealth = 100;
         [NonSerialized] public int currentHealth;
 
-        private float syncInterval = 0.2f;
-        private float nextSyncTime = 0f;
+        private PlayerUIManager playerUIManager;
 
        
 
@@ -21,6 +20,11 @@ namespace RPG.Character
         void Awake()
         {
             currentHealth = maxHealth;
+            playerUIManager = FindObjectOfType<PlayerUIManager>();
+            if (playerUIManager == null)
+            {
+                Debug.LogError("PlayerUIManager not found in the scene.");
+            }
             //playerUIManager = GetComponent<PlayerUIManager>();
         }
 
@@ -29,25 +33,69 @@ namespace RPG.Character
         //     playerUIManager.UpdatePlayerHealth(photonView.ViewID, Health);
         // }
 
-         private void Update()
+         private void FixedUpdate()
         {
-            if (Time.time >= nextSyncTime)
-            {
-                SyncHealthHealth();
-                nextSyncTime = Time.time + syncInterval;
-            }
+            // if (Time.time >= nextSyncTime)
+            // {
+                
+            //     nextSyncTime = Time.time + syncInterval;
+            // }
+            SyncHealthHealth();
         }
 
         public void SyncHealthHealth()
         {
-            if (photonView.IsMine)
+            if (photonView.IsMine && playerUIManager != null)
             {
-                PlayerUIManager playerUIManager = FindObjectOfType<PlayerUIManager>();
-                if (playerUIManager != null)
+                //playerUIManager.SyncHealth(photonView.OwnerActorNr, (float)currentHealth);
+                foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
                 {
-                    playerUIManager.SyncHealth(photonView.OwnerActorNr, currentHealth);
+                    GameObject playerObject = GetPlayerObject(player.ActorNumber);
+                    if (playerObject != null && playerObject.TryGetComponent(out Health playerHealth))
+                    {
+                        playerUIManager.SyncHealth(player.ActorNumber, playerHealth.currentHealth);
+                    }
+                    else
+                    {
+                        Debug.LogError("Player with actor number " + player.ActorNumber + " does not have a Health component or the player object is null.");
+                    }
                 }
             }
+           
+        }
+
+        // Method to find the player object based on ActorNumber
+        private GameObject GetPlayerObject(int actorNumber)
+        {
+            foreach (var player in FindObjectsOfType<PlayerController>())
+            {
+                if (player.photonView.OwnerActorNr == actorNumber)
+                {
+                    return player.gameObject;
+                }
+            }
+            return null;
+        }
+
+        [PunRPC]
+        public void HealthTakeDamage(int damage)
+        {
+            //if (!PV.IsMine) return;
+
+            // Reduce the player's health
+            currentHealth -= damage;
+
+            currentHealth = Mathf.Clamp(currentHealth, 0, 100);
+
+            //health.SyncHealthHealth();
+            //photonView.RPC("UpdatePlayerHealth", RpcTarget.All, photonView.Owner.ActorNumber, (float)health.currentHealth);    
+
+            if (currentHealth <= 0)
+            {
+                // Handle player death
+                DieHealth();
+            }
+            
         }
 
 
@@ -62,7 +110,7 @@ namespace RPG.Character
 
             if (currentHealth <= 0)
             {
-                Die();
+                DieHealth();
             }
         }
 
@@ -74,11 +122,28 @@ namespace RPG.Character
             currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         }
 
-        private void Die()
+        private IEnumerator WaitAndHidePlayer()
         {
-            // Add logic for what happens when the player dies
-            Debug.Log("Player died!");
-            // For example, you might want to respawn the player
+            yield return new WaitForSeconds(.1f);
+            photonView.RPC("RPC_HealthHidePlayer", RpcTarget.AllBuffered);
+        }
+
+        public void DieHealth()
+        {
+            // You can add logic to handle what happens when the player dies
+            Debug.Log("Player has died!");
+
+            // Call RPC to hide the player for all clients
+            //StartCoroutine(WaitAndHidePlayer());
+            //health.SyncHealthHealth();
+            StartCoroutine(WaitAndHidePlayer());
+        }
+
+        [PunRPC]
+        private void RPC_HealthHidePlayer()
+        {
+            // Hide the player by disabling the game object
+            gameObject.SetActive(false);
         }
 
         public int GetCurrentHealth()

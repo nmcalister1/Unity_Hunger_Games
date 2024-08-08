@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -56,7 +57,9 @@ public class PlayerUIManager : MonoBehaviourPunCallbacks
                 Debug.Log("PlayerUI is null, skipping update.");
                 return;
             }
-            playerUI.photonView.RPC("UpdateHealth", RpcTarget.All, health);
+            HealthBarFillScript healthBar = playerUI.GetComponentInChildren<HealthBarFillScript>();
+            healthBar.UpdateHealth(health);
+            //healthBar.photonView.RPC("RPC_UpdateHealth", RpcTarget.All, health);
         }
         else 
         {

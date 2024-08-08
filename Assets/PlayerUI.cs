@@ -9,7 +9,7 @@ namespace RPG.Character
     public class PlayerUI : MonoBehaviourPunCallbacks
     {
         public TextMeshProUGUI usernameText;
-        public TextMeshProUGUI deadText;
+        
 
         public void SetPlayer(Photon.Realtime.Player player)
         {
@@ -17,35 +17,35 @@ namespace RPG.Character
             //healthText.text = "100";
         }
 
-        [PunRPC]
-        public void UpdateHealth(float health)
-        {
-            //healthText.text = health.ToString();
+        // [PunRPC]
+        // public void UpdateHealth(float health)
+        // {
+        //     //healthText.text = health.ToString();
             
-            HealthBarFillScript healthBar = GetComponentInChildren<HealthBarFillScript>();
-            if (healthBar != null)
-            {
-                PhotonView photonView = healthBar.GetComponent<PhotonView>();
-                if (photonView != null)
-                {
-                    photonView.RPC("UpdateHealth", RpcTarget.All, health);
-                }
-                else
-                {
-                    Debug.LogError("PhotonView is missing on HealthBarFillScript GameObject.");
-                }
-            }
-            else
-            {
-                Debug.LogError("HealthBarFillScript is missing in PlayerUI.");
-            }
+        //     HealthBarFillScript healthBar = GetComponentInChildren<HealthBarFillScript>();
+        //     if (healthBar != null)
+        //     {
+        //         PhotonView photonView = healthBar.GetComponent<PhotonView>();
+        //         if (photonView != null)
+        //         {
+        //             photonView.RPC("UpdateHealth", RpcTarget.All, health);
+        //         }
+        //         else
+        //         {
+        //             Debug.LogError("PhotonView is missing on HealthBarFillScript GameObject.");
+        //         }
+        //     }
+        //     else
+        //     {
+        //         Debug.LogError("HealthBarFillScript is missing in PlayerUI.");
+        //     }
 
-            // Check health and enable the "Dead" text if health is 0 or below
-            if (deadText != null)
-            {
-                deadText.gameObject.SetActive(health <= 0);
-            }
-        }
+        //     // Check health and enable the "Dead" text if health is 0 or below
+        //     if (deadText != null)
+        //     {
+        //         deadText.gameObject.SetActive(health <= 0);
+        //     }
+        // }
     }
 
 }
