@@ -19,50 +19,50 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
     private List<Vector3> spawnTilePositions = new List<Vector3>(); // List to store spawn tile positions
     private GameObject[] prefabs; // Array to store all prefabs
     private float[] probabilities; // Array to store probabilities
-    private float chickenProbability = 0.16f; // Initial probability of chickenPrefab
+    //private float chickenProbability = 0.16f; // Initial probability of chickenPrefab
 
     private void Start()
     {
-        // Collect all positions of objects tagged as 'SpawnTile'
-        CollectSpawnTilePositions();
-
-        // Initialize the array with all the prefabs
-        prefabs = new GameObject[]
+        if (PhotonNetwork.IsMasterClient)
         {
-            fastFeetPrefab,
-            lightningPrefab,
-            laserGunPrefab,
-            rocketLauncherPrefab,
-            invisibilityCloakPrefab,
-            chickenPrefab,
-            minesPrefab,
-            swordsPrefab
-        };
+            // Collect all positions of objects tagged as 'SpawnTile'
+            CollectSpawnTilePositions();
 
-        // Initialize the probabilities
-        probabilities = new float[]
-        {
-            0.125f, // fastFeetPrefab
-            0.125f, // lightningPrefab
-            0.125f, // laserGunPrefab
-            0.125f, // rocketLauncherPrefab
-            0.125f, // invisibilityCloakPrefab
-            0.125f, // chickenPrefab
-            0.125f,  // minesPrefab
-            0.125f  // swordsPrefab
-        };
+            // Initialize the array with all the prefabs
+            prefabs = new GameObject[]
+            {
+                fastFeetPrefab,
+                lightningPrefab,
+                laserGunPrefab,
+                rocketLauncherPrefab,
+                invisibilityCloakPrefab,
+                chickenPrefab,
+                minesPrefab,
+                swordsPrefab
+            };
 
-        // Spawn the initial set of prefabs
-        for (int i = 0; i < 10; i++)
-        {
-            SpawnCube();
+            // Initialize the probabilities
+            probabilities = new float[]
+            {
+                0.125f, // fastFeetPrefab
+                0.125f, // lightningPrefab
+                0.125f, // laserGunPrefab
+                0.125f, // rocketLauncherPrefab
+                0.125f, // invisibilityCloakPrefab
+                0.125f, // chickenPrefab
+                0.125f, // minesPrefab
+                0.125f  // swordsPrefab
+            };
+
+            // Spawn the initial set of prefabs
+            for (int i = 0; i < 10; i++)
+            {
+                SpawnCube();
+            }
+
+            // Start the routine to spawn more prefabs at intervals
+            StartCoroutine(SpawnCubeRoutine());
         }
-
-        // Start the routine to spawn more prefabs at intervals
-        StartCoroutine(SpawnCubeRoutine());
-
-        // Start the routine to decrease the chicken probability
-        StartCoroutine(DecreaseChickenProbabilityRoutine());
     }
 
     private void CollectSpawnTilePositions()
@@ -86,31 +86,31 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
             yield return new WaitForSeconds(spawnInterval);
 
             // Spawn the specified number of prefabs at each interval
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 7; i++)
             {
                 SpawnCube();
             }
         }
     }
 
-    private IEnumerator DecreaseChickenProbabilityRoutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(15f);
+    // private IEnumerator DecreaseChickenProbabilityRoutine()
+    // {
+    //     while (true)
+    //     {
+    //         yield return new WaitForSeconds(15f);
 
-            // Decrease the chicken probability by 0.01%
-            chickenProbability -= 0.0001f;
+    //         // Decrease the chicken probability by 0.01%
+    //         chickenProbability -= 0.0001f;
 
-            // Ensure it doesn't go below 0
-            chickenProbability = Mathf.Max(chickenProbability, 0f);
+    //         // Ensure it doesn't go below 0
+    //         chickenProbability = Mathf.Max(chickenProbability, 0f);
 
-            // Update the probabilities array
-            probabilities[5] = chickenProbability;
+    //         // Update the probabilities array
+    //         probabilities[5] = chickenProbability;
 
-            Debug.Log($"Updated chicken probability: {chickenProbability}");
-        }
-    }
+    //         Debug.Log($"Updated chicken probability: {chickenProbability}");
+    //     }
+    // }
 
     private void SpawnCube()
     {

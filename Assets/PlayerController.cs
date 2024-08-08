@@ -78,6 +78,7 @@ namespace RPG.Character
         private int swingsRemaining = 3;
         private float swordSwingRadius = 3f; // Radius of the sword swing
         private int swordDamage = 50;
+        private bool canMove = false;
 
         private PlayerUIManager playerUIManager;
 
@@ -148,6 +149,7 @@ namespace RPG.Character
         private void Update()
         {
             if (!PV.IsMine) return;
+            if (!canMove) return;
             Look();
             Move();
             Jump();
@@ -202,8 +204,10 @@ namespace RPG.Character
         //     Debug.Log("Current OwnerNumber: " + ownerNumber);
         // }
 
-
-
+        public void EnableMovement()
+        {
+            canMove = true;
+        }
 
 
         private void Look()
