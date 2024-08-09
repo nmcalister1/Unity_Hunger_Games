@@ -21,6 +21,10 @@ TagManager:
   - HealthGroup
   - PlayerSpawnPoint
   - FaceTile
+  - SpawnOffRip
+  - SpawnRocketLauncher
+  - SpawnFastFeet
+  - SpawnItemAtStart
   layers:
   - Default
   - TransparentFX

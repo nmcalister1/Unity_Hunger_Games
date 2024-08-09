@@ -10,6 +10,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 {
     public static Launcher Instance;
     [SerializeField] private TMP_InputField roomNameInputField;
+    [SerializeField] private TMP_InputField nicknameInputField;
     [SerializeField] private TMP_Text errorText;
     [SerializeField] private TMP_Text roomNameText;
     [SerializeField] private Transform roomListContent;
@@ -28,17 +29,58 @@ public class Launcher : MonoBehaviourPunCallbacks
         PhotonNetwork.ConnectUsingSettings();
     }
 
+    // public override void OnConnectedToMaster()
+    // {
+    //     PhotonNetwork.JoinLobby();
+    //     PhotonNetwork.AutomaticallySyncScene = true;
+    // }
+
     public override void OnConnectedToMaster()
     {
-        PhotonNetwork.JoinLobby();
+        MenuManager.Instance.OpenMenu("createNickname");
         PhotonNetwork.AutomaticallySyncScene = true;
+    }
+
+    // public void OnCreateNickname()
+    // {
+    //     MenuManager.Instance.OpenMenu("create nickname");
+    //     PhotonNetwork.NickName = nicknameInputField.text;
+    //     MenuManager.Instance.OpenMenu("loading");
+    //     MenuManager.Instance.OpenMenu("title");
+    // }
+
+    public void OnCreateNickname()
+    {
+        //MenuManager.Instance.OpenMenu("create nickname");
+        if (string.IsNullOrEmpty(nicknameInputField.text))
+        {
+            // Use a default or random nickname if the input field is empty
+            PhotonNetwork.NickName = "Player " + Random.Range(0, 1000).ToString("0000");
+        }
+        else
+        {
+            PhotonNetwork.NickName = nicknameInputField.text;
+        }
+        PhotonNetwork.JoinLobby();
+        MenuManager.Instance.OpenMenu("loading");
     }
 
     public override void OnJoinedLobby()
     {
         MenuManager.Instance.OpenMenu("title");
         Debug.Log("Joined Lobby");
-        PhotonNetwork.NickName = "Player " + Random.Range(0, 1000).ToString("0000");
+        //PhotonNetwork.NickName = "Player " + Random.Range(0, 1000).ToString("0000");
+
+        // Check if the nickname input field is not empty
+        // if (!string.IsNullOrEmpty(nicknameInputField.text))
+        // {
+        //     PhotonNetwork.NickName = nicknameInputField.text;
+        // }
+        // else
+        // {
+        //     // Use a default or random nickname if the input field is empty
+        //     PhotonNetwork.NickName = "Player " + Random.Range(0, 1000).ToString("0000");
+        // }
     }
 
     public void CreateRoom()

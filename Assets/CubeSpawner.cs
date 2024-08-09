@@ -1,8 +1,12 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
+using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
-using Photon.Pun; // Import Photon.Pun
+using ExitGames.Client.Photon;
+using UnityEngine.Events;
+using RPG.Character;
+
 
 public class CubeSpawner : MonoBehaviourPunCallbacks
 {
@@ -15,6 +19,8 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
     public GameObject minesPrefab;
     public GameObject swordsPrefab;
     public float spawnInterval = 15f; // Time interval in seconds
+    public UnityEvent onNewSupplies;
+    private const byte NEW_SUPPLIES_EVENT = 1; // Event code for new supplies
 
     private List<Vector3> spawnTilePositions = new List<Vector3>(); // List to store spawn tile positions
     private GameObject[] prefabs; // Array to store all prefabs
@@ -62,6 +68,9 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
 
             // Start the routine to spawn more prefabs at intervals
             StartCoroutine(SpawnCubeRoutine());
+
+            // Spawn items at the start of the game on specified tiles
+            SpawnItemsAtStart();
         }
     }
 
@@ -85,6 +94,12 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
         {
             yield return new WaitForSeconds(spawnInterval);
 
+            // Raise the UnityEvent
+            //onNewSupplies.Invoke();
+
+            // Raise the UnityEvent
+            PlayerController.OnNewSuppliesEvent.Invoke();
+
             // Spawn the specified number of prefabs at each interval
             for (int i = 0; i < 7; i++)
             {
@@ -93,24 +108,6 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
         }
     }
 
-    // private IEnumerator DecreaseChickenProbabilityRoutine()
-    // {
-    //     while (true)
-    //     {
-    //         yield return new WaitForSeconds(15f);
-
-    //         // Decrease the chicken probability by 0.01%
-    //         chickenProbability -= 0.0001f;
-
-    //         // Ensure it doesn't go below 0
-    //         chickenProbability = Mathf.Max(chickenProbability, 0f);
-
-    //         // Update the probabilities array
-    //         probabilities[5] = chickenProbability;
-
-    //         Debug.Log($"Updated chicken probability: {chickenProbability}");
-    //     }
-    // }
 
     private void SpawnCube()
     {
@@ -164,6 +161,56 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
         }
 
         return null; // Fallback in case something goes wrong
+    }
+
+    private void SpawnItemsAtStart()
+    {
+        // Find all GameObjects with the tag 'SpawnItemAtStart'
+        GameObject[] startSpawnTiles = GameObject.FindGameObjectsWithTag("SpawnItemAtStart");
+
+        if (startSpawnTiles.Length < 4)
+        {
+            Debug.LogWarning("Not enough spawn tiles with the tag 'SpawnItemAtStart'.");
+            return;
+        }
+
+        // Ensure startSpawnTiles is ordered consistently, if necessary
+        System.Array.Sort(startSpawnTiles, (tile1, tile2) => tile1.name.CompareTo(tile2.name));
+
+        // Specify the prefabs to be spawned in the desired order
+        GameObject[] itemsToSpawn = new GameObject[]
+        {
+            rocketLauncherPrefab,
+            fastFeetPrefab,
+            fastFeetPrefab,
+            invisibilityCloakPrefab
+        };
+
+        // Iterate through the specified tiles and spawn the corresponding items
+        for (int i = 0; i < itemsToSpawn.Length; i++)
+        {
+            Vector3 spawnPosition = startSpawnTiles[i].transform.position + new Vector3(0, 1.5f, 0);
+            GameObject prefabToSpawn = itemsToSpawn[i];
+
+            if (prefabToSpawn != null)
+            {
+                string prefabName = prefabToSpawn.name;
+                PhotonNetwork.Instantiate("Prefabs/" + prefabName, spawnPosition, Quaternion.identity);
+            }
+            else
+            {
+                Debug.LogWarning("Prefab to spawn is null.");
+            }
+        }
+    }
+
+
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Start();
+        }
     }
 }
 

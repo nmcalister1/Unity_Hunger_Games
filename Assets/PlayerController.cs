@@ -2,7 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
-
+using TMPro;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
+using UnityEngine.Events;
 
 
 
@@ -68,6 +71,17 @@ namespace RPG.Character
         private bool isFastFeetActive; // To keep track of the fast feet state
 
 
+        public TextMeshProUGUI newSuppliesText;
+        public TextMeshProUGUI lowHealthText;
+        public static UnityEvent OnNewSuppliesEvent = new UnityEvent();
+
+        private const byte NEW_SUPPLIES_EVENT = 1;
+
+
+        private bool isLow = false;
+        private bool isCoroutineRunning = false;
+
+        private float deathHeight = -1f;
 
 
         public GameObject laserProjectilePrefab;
@@ -121,25 +135,8 @@ namespace RPG.Character
             else 
             {
                 StartCoroutine(DecreaseHealthPeriodically());
+                inventory.PickUpItem("chicken");
             }
-
-            // Store all player ActorNumbers in the list
-            // foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
-            // {
-            //     playerActorNumbers.Add(player.ActorNumber);
-            //     Debug.Log("Added Player ActorNumber: " + player.ActorNumber);
-            // }
-
-            //Debug.Log(PV.Owner.ActorNumber);    
-            
-            // if (PV.Owner.ActorNumber == ownerNumber)
-            // {
-            //     Debug.Log("Player 1 implementing decrease health coroutine");
-                
-            // }
-
-            
-
             
         }
 
@@ -164,9 +161,100 @@ namespace RPG.Character
             UseLandMine();
             UseSword();
 
+            CheckHealth();
+            CheckFallOffMap();
+
             //CheckActorNumber();
 
         }
+
+        private new void OnEnable()
+        {
+            OnNewSuppliesEvent.AddListener(OnNewSupplies);
+        }
+
+        private new void OnDisable()
+        {
+            OnNewSuppliesEvent.RemoveListener(OnNewSupplies);
+        }
+
+        public void OnNewSupplies()
+        {
+            Debug.Log("New supplies event has been triggered.");
+            photonView.RPC("StartNewSuppliesEvent", RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void StartNewSuppliesEvent()
+        {
+            StartCoroutine(ShowNewSuppliesText());
+        }
+
+        private IEnumerator ShowNewSuppliesText()
+        {
+            if (newSuppliesText != null)
+            {
+                Debug.Log("Showing new supplies text.");
+                newSuppliesText.gameObject.SetActive(true);
+                yield return new WaitForSeconds(2f);
+                newSuppliesText.gameObject.SetActive(false);
+            }
+        }
+
+        private void CheckHealth()
+        {
+            if (!isLow && health.currentHealth > 20) return; // Exit if health is fine and not low
+            if (isLow && health.currentHealth <= 20) return; // Exit if health is still low
+            if (isLow && health.currentHealth > 20)
+            {
+                isLow = false;
+                lowHealthText.gameObject.SetActive(false);
+                return; // Exit after resetting low health state
+            }
+
+            isLow = true;
+            if (!isCoroutineRunning)
+            {
+                lowHealthText.gameObject.SetActive(true);
+                StartCoroutine(ShowLowHealthText());
+            }
+        }
+
+        private IEnumerator ShowLowHealthText()
+        {
+            isCoroutineRunning = true;
+            yield return new WaitForSeconds(2f);
+            lowHealthText.gameObject.SetActive(false);
+            isCoroutineRunning = false;
+        }
+
+        private void CheckFallOffMap()
+        {
+            if (transform.position.y < deathHeight)
+            {
+                photonView.RPC("TakeDamage", RpcTarget.AllBuffered, 100);
+            }
+        }
+
+        // private void CheckHealth()
+        // {
+        //     if (isLow == false && health.currentHealth > 20) return;
+        //     if (isLow == true && health.currentHealth <= 20) return;
+        //     if (isLow == true && health.currentHealth > 20)
+        //     {
+        //         isLow = false;
+        //     }
+
+        //     lowHealthText.gameObject.SetActive(true);
+        //     StartCoroutine(ShowLowHealthText());
+        //     isLow = true;
+        // }
+
+        // private IEnumerator ShowLowHealthText()
+        // {
+        //     yield return new WaitForSeconds(2f);
+        //     lowHealthText.gameObject.SetActive(false);
+        // }
 
         // private void CheckActorNumber()
         // {
@@ -389,6 +477,8 @@ namespace RPG.Character
             // PhotonNetwork.Destroy(gameObject);
             // PhotonNetwork.LeaveRoom();
         }
+
+        
 
 
 

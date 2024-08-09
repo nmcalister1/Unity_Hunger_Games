@@ -6,7 +6,7 @@ using Photon.Pun; // Import Photon.Pun
 
 public class CloakSpawner : MonoBehaviour
 {
-    public GameObject invisibilityCloakPrefab; // Assign the cloak prefab in the inspector
+    public GameObject itemPrefab; // Assign the cloak prefab in the inspector
 
     private void Start()
     {
@@ -27,7 +27,7 @@ public class CloakSpawner : MonoBehaviour
             spawnPosition.y += 1.5f; // Adjust this value as needed
 
             // Instantiate the cloak
-            Instantiate(invisibilityCloakPrefab, spawnPosition, Quaternion.identity);
+            Instantiate(itemPrefab, spawnPosition, Quaternion.identity);
         }
         else
         {
