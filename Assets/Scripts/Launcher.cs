@@ -37,6 +37,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
+        Debug.Log("Connected to Master. Opening 'createNickname' menu.");
         MenuManager.Instance.OpenMenu("createNickname");
         PhotonNetwork.AutomaticallySyncScene = true;
     }
@@ -62,6 +63,7 @@ public class Launcher : MonoBehaviourPunCallbacks
             PhotonNetwork.NickName = nicknameInputField.text;
         }
         PhotonNetwork.JoinLobby();
+        Debug.Log("Nickname set. Joining lobby and opening 'loading' menu.");
         MenuManager.Instance.OpenMenu("loading");
     }
 

@@ -10,6 +10,7 @@ public class PlayerManager : MonoBehaviour
     PhotonView PV;
     private CountdownTimer countdownTimer;
     private bool canMove = false;
+    private static List<GameObject> availableSpawnPoints = new List<GameObject>();
 
     void Awake()
     {
@@ -26,32 +27,20 @@ public class PlayerManager : MonoBehaviour
 
     void CreateController()
     {
-
-        // // Calculate the spawn position above ground level
-        // Vector3 spawnPosition = Vector3.zero; // Default spawn position (modify as needed)
-        // float spawnHeightAboveGround = 2.0f; // Adjust this value to set the spawn height above ground
-
-        // // Perform a raycast to find the ground level if needed
-        // RaycastHit hit;
-        // if (Physics.Raycast(Vector3.zero, Vector3.down, out hit, Mathf.Infinity, LayerMask.GetMask("Ground")))
-        // {
-        //     spawnPosition = hit.point + Vector3.up * spawnHeightAboveGround;
-        // }
-        // else
-        // {
-        //     spawnPosition = Vector3.up * spawnHeightAboveGround; // Default to a fixed height above the origin
-        // }
-
-        // PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), spawnPosition, Quaternion.identity);
-
-        // Get all spawn points with the tag "PlayerSpawnPoint"
-        GameObject[] spawnPoints = GameObject.FindGameObjectsWithTag("PlayerSpawnPoint");
+        // Check if the available spawn points list is empty, if so, populate it
+        if (availableSpawnPoints.Count == 0)
+        {
+            availableSpawnPoints.AddRange(GameObject.FindGameObjectsWithTag("PlayerSpawnPoint"));
+        }
 
         // Check if there are available spawn points
-        if (spawnPoints.Length > 0)
+        if (availableSpawnPoints.Count > 0)
         {
             // Choose a random spawn point
-            GameObject spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
+            GameObject spawnPoint = availableSpawnPoints[Random.Range(0, availableSpawnPoints.Count)];
+
+            // Remove the selected spawn point from the available list
+            availableSpawnPoints.Remove(spawnPoint);
 
             // Get the spawn position
             Vector3 spawnPosition = spawnPoint.transform.position;
@@ -99,3 +88,4 @@ public class PlayerManager : MonoBehaviour
         }
     }
 }
+
