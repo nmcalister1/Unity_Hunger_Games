@@ -1,91 +1,170 @@
+// using System.Collections;
+// using System.Collections.Generic;
+// using UnityEngine;
+// using Photon.Pun;
+// using System.IO;
+// using RPG.Character;
+// using Photon.Realtime;
+// using ExitGames.Client.Photon;
+// using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
+
+// public class PlayerManager : MonoBehaviourPunCallbacks
+// {
+//     private PhotonView PV;
+//     private const float SpawnHeightAboveGround = 2.0f;
+//     private const float XOffset = 7.0f;
+
+//     void Awake()
+//     {
+//         PV = GetComponent<PhotonView>();
+//     }
+
+//     void Start()
+//     {
+//         if (PV.IsMine)
+//         {
+//             CreateController();
+//         }
+//     }
+
+//     void CreateController()
+//     {
+//         Vector3 spawnPosition = transform.position;
+//         spawnPosition.x += XOffset;
+//         spawnPosition += Vector3.up * SpawnHeightAboveGround;
+
+//         GameObject faceTile = GameObject.FindGameObjectWithTag("FaceTile");
+//         Quaternion targetRotation = Quaternion.identity;
+//         if (faceTile != null)
+//         {
+//             Vector3 directionToFace = faceTile.transform.position - spawnPosition;
+//             directionToFace.y = 0;
+//             targetRotation = Quaternion.LookRotation(directionToFace);
+//         }
+
+//         GameObject player = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), spawnPosition, targetRotation);
+//         Debug.Log("Player instantiated");
+
+//         CountdownTimer countdownTimer = player.GetComponent<CountdownTimer>();
+//         if (countdownTimer != null)
+//         {
+//             countdownTimer.enabled = true;
+//             StartCoroutine(DisableMovementDuringCountdown(player, countdownTimer));
+//         }
+//     }
+
+//     IEnumerator DisableMovementDuringCountdown(GameObject player, CountdownTimer countdownTimer)
+//     {
+//         Debug.Log("Disabling movement during countdown");
+//         PlayerController playerController = player.GetComponent<PlayerController>();
+//         if (playerController != null)
+//         {
+//             yield return new WaitUntil(() => countdownTimer.IsCountdownFinished());
+//             playerController.EnableMovement();
+//         }
+//     }
+// }
+
+
+
+
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
-using System.IO;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
+using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 using RPG.Character;
+using System.IO;
+using TMPro;
 
-public class PlayerManager : MonoBehaviour
+namespace RPG.Character
 {
-    PhotonView PV;
-    private CountdownTimer countdownTimer;
-    private bool canMove = false;
-    private static List<GameObject> availableSpawnPoints = new List<GameObject>();
-
-    void Awake()
+    public class PlayerManager : MonoBehaviourPunCallbacks
     {
-        PV = GetComponent<PhotonView>();
-    }
+        private PhotonView PV;
+        private const int CountdownTime = 5; // Countdown in seconds
+        private const string GameStartKey = "GameStarted";
+        private const float SpawnHeightAboveGround = 2.0f;
+        private const float XOffset = 7.0f;
 
-    void Start()
-    {
-        if (PV.IsMine)
+        // Define a list of possible spawn positions
+        private List<Vector3> spawnPositions = new List<Vector3>
         {
-            CreateController();
+            new Vector3(7, 0, 10),
+            new Vector3(7, 0, 5),
+            new Vector3(7, 0, -3),
+            new Vector3(0, 0, -3),
+            new Vector3(-6, 0, -3),
+            new Vector3(-6, 0, 4),
+            new Vector3(-6, 0, 11),
+            new Vector3(0, 0, 11),
+            // Add more pairs as needed
+        };
+
+        void Awake()
+        {
+            PV = GetComponent<PhotonView>();
         }
-    }
 
-    void CreateController()
-    {
-        // Check if the available spawn points list is empty, if so, populate it
-        if (availableSpawnPoints.Count == 0)
+        void Start()
         {
-            availableSpawnPoints.AddRange(GameObject.FindGameObjectsWithTag("PlayerSpawnPoint"));
+            if (PV.IsMine)
+            {
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    StartCoroutine(StartGameCountdown());
+                }
+            }
         }
 
-        // Check if there are available spawn points
-        if (availableSpawnPoints.Count > 0)
+        private IEnumerator StartGameCountdown()
         {
-            // Choose a random spawn point
-            GameObject spawnPoint = availableSpawnPoints[Random.Range(0, availableSpawnPoints.Count)];
+            Debug.Log("Starting game countdown...");
 
-            // Remove the selected spawn point from the available list
-            availableSpawnPoints.Remove(spawnPoint);
+            // Start a countdown
+            yield return new WaitForSeconds(CountdownTime);
 
-            // Get the spawn position
-            Vector3 spawnPosition = spawnPoint.transform.position;
+            // Call the RPC to create player controllers
+            PV.RPC("CreateController", RpcTarget.All);
+        }
 
-            // Adjust the spawn position to be above the ground if needed
-            float spawnHeightAboveGround = 2.0f; // Adjust this value to set the spawn height above ground
-            spawnPosition += Vector3.up * spawnHeightAboveGround;
+        [PunRPC]
+        void CreateController()
+        {
+            Vector3 spawnPosition = GetRandomSpawnPosition();
 
-            // Find the "FaceTile" cube
+            //Vector3 spawnPosition = transform.position;
+            spawnPosition += Vector3.up * SpawnHeightAboveGround;
+
             GameObject faceTile = GameObject.FindGameObjectWithTag("FaceTile");
             Quaternion targetRotation = Quaternion.identity;
             if (faceTile != null)
             {
-                // Calculate the direction to face the "FaceTile" cube
                 Vector3 directionToFace = faceTile.transform.position - spawnPosition;
-                directionToFace.y = 0; // Keep only the horizontal direction
+                directionToFace.y = 0;
                 targetRotation = Quaternion.LookRotation(directionToFace);
             }
 
-            // Instantiate the player at the chosen spawn point with the target rotation
+            // wait for event to fire from master client before instantiating player
+
             GameObject player = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), spawnPosition, targetRotation);
+            Debug.Log("Player instantiated");
 
-            // Enable the CountdownTimer script and disable movement initially
-            CountdownTimer countdownTimer = player.GetComponent<CountdownTimer>();
-            countdownTimer.enabled = true;
-            StartCoroutine(DisableMovementDuringCountdown(player, countdownTimer));
         }
-        else
-        {
-            // Default spawn position if no spawn points are found
-            Vector3 spawnPosition = Vector3.up * 2.0f; // Default to a fixed height above the origin
 
-            PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), spawnPosition, Quaternion.identity);
-        }
-    }
-
-    IEnumerator DisableMovementDuringCountdown(GameObject player, CountdownTimer countdownTimer)
-    {
-        // Get the PlayerController component and disable movement
-        PlayerController playerController = player.GetComponent<PlayerController>();
-        if (playerController != null)
+        private Vector3 GetRandomSpawnPosition()
         {
-            yield return new WaitUntil(() => countdownTimer.IsCountdownFinished());
-            playerController.EnableMovement();
+            int randomIndex = Random.Range(0, spawnPositions.Count); // Get a random index
+            return spawnPositions[randomIndex]; // Return the spawn position at that index
         }
     }
 }
+
+
+
+
+
 

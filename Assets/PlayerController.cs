@@ -8,7 +8,6 @@ using ExitGames.Client.Photon;
 using UnityEngine.Events;
 
 
-
 namespace RPG.Character
 {
     public class PlayerController : MonoBehaviourPunCallbacks
@@ -92,7 +91,7 @@ namespace RPG.Character
         private int swingsRemaining = 3;
         private float swordSwingRadius = 3f; // Radius of the sword swing
         private int swordDamage = 50;
-        private bool canMove = false;
+        private bool canMove = true;
 
         private PlayerUIManager playerUIManager;
 
@@ -134,8 +133,12 @@ namespace RPG.Character
             }
             else 
             {
-                StartCoroutine(DecreaseHealthPeriodically());
-                inventory.PickUpItem("chicken");
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    StartCoroutine(DecreaseHealthPeriodically());
+                    StartCountdownTimer();
+                }
+            
             }
             
         }
@@ -166,6 +169,75 @@ namespace RPG.Character
 
             //CheckActorNumber();
 
+        }
+
+        public void StartCountdownTimer()
+        {
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+
+            foreach (GameObject player in players)
+            {
+                PhotonView playerPhotonView = player.GetComponent<PhotonView>();
+                if (playerPhotonView != null)
+                {
+                    playerPhotonView.RPC("DisableMovementDuringCountdownRPC", RpcTarget.AllBuffered);
+                }
+            }
+            
+        }
+
+        [PunRPC]
+        private void DisableMovementDuringCountdownRPC()
+        {
+            DisableMovementDuringCountdown();
+        }
+
+         [PunRPC]
+        public void EnableMovementRPC()
+        {
+            EnableMovement();
+        }
+
+        private void DisableMovementDuringCountdown()
+        {
+            CountdownTimer countdownTimer = GetComponent<CountdownTimer>();
+            //PlayerController playerController = GetComponent<PlayerController>();
+            if (countdownTimer != null)
+            {
+                countdownTimer.enabled = true;
+                StartCoroutine(WaitForCountdown());
+                //yield return new WaitUntil(() => countdownTimer.IsCountdownFinished());
+                //Debug.LogWarning("Countdown finished. Enabling movement.");
+                //PV.RPC("EnableMovementRPC", RpcTarget.AllBuffered);
+            }
+        }
+
+        private IEnumerator WaitForCountdown()
+        {
+            yield return new WaitForSeconds(3f);
+            DestroySpawnPointsRPC();
+            
+        }
+
+        //[PunRPC]
+        private void DestroySpawnPointsRPC()
+        {
+            GameObject[] spawnPoints = GameObject.FindGameObjectsWithTag("PlayerSpawnPoint");
+            foreach (GameObject spawnPoint in spawnPoints)
+            {
+                Destroy(spawnPoint);
+            }
+        }
+
+        public void EnableMovement()
+        {
+            Debug.Log("Movement enabled for player: " + PV.Owner.NickName);
+            canMove = true;
+        }
+
+        public void DisableMovement()
+        {
+            canMove = false;
         }
 
         private new void OnEnable()
@@ -236,67 +308,6 @@ namespace RPG.Character
             }
         }
 
-        // private void CheckHealth()
-        // {
-        //     if (isLow == false && health.currentHealth > 20) return;
-        //     if (isLow == true && health.currentHealth <= 20) return;
-        //     if (isLow == true && health.currentHealth > 20)
-        //     {
-        //         isLow = false;
-        //     }
-
-        //     lowHealthText.gameObject.SetActive(true);
-        //     StartCoroutine(ShowLowHealthText());
-        //     isLow = true;
-        // }
-
-        // private IEnumerator ShowLowHealthText()
-        // {
-        //     yield return new WaitForSeconds(2f);
-        //     lowHealthText.gameObject.SetActive(false);
-        // }
-
-        // private void CheckActorNumber()
-        // {
-        //     List<int> currentActorNumbers = new List<int>();
-
-        //     // Add the current actor numbers from the player list
-        //     foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
-        //     {
-        //         currentActorNumbers.Add(player.ActorNumber);
-        //         Debug.Log("Current Player ActorNumber: " + player.ActorNumber);
-        //     }
-
-        //     // Remove actors that are not in the current player list
-        //     playerActorNumbers.RemoveAll(actorNumber => !currentActorNumbers.Contains(actorNumber));
-
-        //     // Debug the updated player actor numbers list
-        //     Debug.Log("Updated Player ActorNumbers: " + string.Join(", ", playerActorNumbers));
-
-        //     // If the current owner is not in the list, choose a new owner
-        //     if (!playerActorNumbers.Contains(ownerNumber))
-        //     {
-        //         if (playerActorNumbers.Count > 0)
-        //         {
-        //             // Select the first actor number from the list as the new owner
-        //             ownerNumber = playerActorNumbers[0];
-        //             Debug.Log("New OwnerNumber selected: " + ownerNumber);
-        //         }
-        //         else
-        //         {
-        //             Debug.LogWarning("No valid player actor numbers found.");
-        //             ownerNumber = -1; // No valid owner
-        //         }
-        //     }
-
-        //     Debug.Log("Current OwnerNumber: " + ownerNumber);
-        // }
-
-        public void EnableMovement()
-        {
-            canMove = true;
-        }
-
 
         private void Look()
         {
@@ -351,6 +362,17 @@ namespace RPG.Character
             rb.MovePosition(rb.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
         }
 
+        public void ChickenAtStart()
+        {
+            photonView.RPC("GetChickenAtStart", RpcTarget.All);
+        }
+
+        [PunRPC]
+        public void GetChickenAtStart()
+        {
+            inventory.PickUpItem("chicken");
+        }
+
 
 
         [PunRPC]
@@ -385,57 +407,23 @@ namespace RPG.Character
 
         private void DecreaseAllPlayersHealth()
         {
-            photonView.RPC("TakeDamage", RpcTarget.AllBuffered, 5);
-            // health.currentHealth -= 5;
+            // photonView.RPC("TakeDamage", RpcTarget.All, 5);
+            // ChickenAtStart();
+            // Find all GameObjects with the "Player" tag
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
 
-            // health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
- 
-
-            // if (health.currentHealth <= 0)
-            // {
-            //     // Handle player death
-            //     Die();
-            // }
-            // if (playerUIManager != null)
-            // {
-            //     //playerUIManager.SyncHealth(photonView.OwnerActorNr, (float)currentHealth);
-            //     foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerList)
-            //     {
-            //         GameObject playerObject = GetPlayerObjects(player.ActorNumber);
-            //         if (playerObject != null && playerObject.TryGetComponent(out Health playerHealth))
-            //         {
-            //             //playerHealth.photonView.RPC("HealthTakeDamage", RpcTarget.All, 10);
-
-            //             playerHealth.currentHealth -= 5;
-            //             playerHealth.currentHealth = Mathf.Clamp(playerHealth.currentHealth, 0, 100);
-            //             playerUIManager.SyncHealth(player.ActorNumber, playerHealth.currentHealth);
-
-            //             if (playerHealth.currentHealth <= 0)
-            //             {
-            //                 playerHealth.DieHealth();
-            //             }
-            //         }
-            //         else
-            //         {
-            //             Debug.LogError("Player with actor number " + player.ActorNumber + " does not have a Health component or the player object is null.");
-            //         }
-            //     }
-            // }
-           
+            foreach (GameObject player in players)
+            {
+                Debug.Log("Player: " + player.name);
+                PhotonView playerPhotonView = player.GetComponent<PhotonView>();
+                
+                if (playerPhotonView != null)
+                {
+                    // Call the TakeDamage method on each player's PhotonView
+                    playerPhotonView.RPC("TakeDamage", RpcTarget.AllBuffered, 5);
+                }
+            }
         }
-
-        // Method to find the player object based on ActorNumber
-        // private GameObject GetPlayerObjects(int actorNumber)
-        // {
-        //     foreach (var player in FindObjectsOfType<PlayerController>())
-        //     {
-        //         if (player.photonView.OwnerActorNr == actorNumber)
-        //         {
-        //             return player.gameObject;
-        //         }
-        //     }
-        //     return null;
-        // }
 
 
 

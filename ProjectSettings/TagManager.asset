@@ -25,6 +25,7 @@ TagManager:
   - SpawnRocketLauncher
   - SpawnFastFeet
   - SpawnItemAtStart
+  - ConnectToGame
   layers:
   - Default
   - TransparentFX
