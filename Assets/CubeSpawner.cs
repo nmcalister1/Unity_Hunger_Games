@@ -207,6 +207,7 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
 
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
+        Debug.Log("Master client switched to " + newMasterClient.NickName + ". Inside of cubespawner script");
         if (PhotonNetwork.IsMasterClient)
         {
             Start();

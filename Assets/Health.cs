@@ -57,7 +57,7 @@ namespace RPG.Character
                     }
                     else
                     {
-                        Debug.LogError("Player with actor number " + player.ActorNumber + " does not have a Health component or the player object is null.");
+                        Debug.LogWarning("Player with actor number " + player.ActorNumber + " does not have a Health component or the player object is null.");
                     }
                 }
             }

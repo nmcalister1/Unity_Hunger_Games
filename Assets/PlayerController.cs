@@ -6,6 +6,7 @@ using TMPro;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
 using UnityEngine.Events;
+using System.Linq;
 
 
 namespace RPG.Character
@@ -94,6 +95,7 @@ namespace RPG.Character
         private bool canMove = true;
 
         private PlayerUIManager playerUIManager;
+        
 
         private int ownerNumber;
         private List<int> playerActorNumbers = new List<int>();
@@ -135,10 +137,12 @@ namespace RPG.Character
             {
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    StartCoroutine(DecreaseHealthPeriodically());
+                    //Debug.Log("Master client is: " + PhotonNetwork.NickName);
+                    //StartCoroutine(DecreaseHealthPeriodically());
                     StartCountdownTimer();
                 }
-            
+                
+                ChickenAtStart();
             }
             
         }
@@ -166,10 +170,12 @@ namespace RPG.Character
 
             CheckHealth();
             CheckFallOffMap();
+            //OnMasterClientSwitched(Photon.Realtime.Player newMasterClient);
 
             //CheckActorNumber();
 
         }
+
 
         public void StartCountdownTimer()
         {
@@ -396,34 +402,35 @@ namespace RPG.Character
             
         }
 
-        private IEnumerator DecreaseHealthPeriodically()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(10f);
-                DecreaseAllPlayersHealth();
-            }
-        }
+        // private IEnumerator DecreaseHealthPeriodically()
+        // {
+        //     Debug.Log("DecreaseHealthPeriodically called.");
+        //     while (true)
+        //     {
+        //         yield return new WaitForSeconds(10f);
+        //         DecreaseAllPlayersHealth();
+        //     }
+        // }
 
-        private void DecreaseAllPlayersHealth()
-        {
-            // photonView.RPC("TakeDamage", RpcTarget.All, 5);
-            // ChickenAtStart();
-            // Find all GameObjects with the "Player" tag
-            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        // private void DecreaseAllPlayersHealth()
+        // {
+        //     // photonView.RPC("TakeDamage", RpcTarget.All, 5);
+        //     // ChickenAtStart();
+        //     // Find all GameObjects with the "Player" tag
+        //     GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
 
-            foreach (GameObject player in players)
-            {
-                Debug.Log("Player: " + player.name);
-                PhotonView playerPhotonView = player.GetComponent<PhotonView>();
+        //     foreach (GameObject player in players)
+        //     {
+        //         Debug.Log("Player: " + player.name);
+        //         PhotonView playerPhotonView = player.GetComponent<PhotonView>();
                 
-                if (playerPhotonView != null)
-                {
-                    // Call the TakeDamage method on each player's PhotonView
-                    playerPhotonView.RPC("TakeDamage", RpcTarget.AllBuffered, 5);
-                }
-            }
-        }
+        //         if (playerPhotonView != null)
+        //         {
+        //             // Call the TakeDamage method on each player's PhotonView
+        //             playerPhotonView.RPC("TakeDamage", RpcTarget.AllBuffered, 5);
+        //         }
+        //     }
+        // }
 
 
 
@@ -462,8 +469,39 @@ namespace RPG.Character
         {
             // Hide the player by disabling the game object
             gameObject.SetActive(false);
-            // PhotonNetwork.Destroy(gameObject);
-            // PhotonNetwork.LeaveRoom();
+            // choose new player still alive and call startcoroutine
+
+            Debug.Log("player set to inactive and checking if ismasterclient");
+            Debug.Log("PhotonNetwork.IsMasterClient: " + PhotonNetwork.IsMasterClient);
+            // Check if the current player was the master client
+            // if (PhotonNetwork.IsMasterClient)
+            // {
+            //     // Get all players in the room
+            //     var players = PhotonNetwork.PlayerList;
+                
+            //     // Filter out players who are still active
+            //     var alivePlayers = players.Where(player => player != PhotonNetwork.LocalPlayer && player.TagObject != null);
+
+            //     // Choose a random new master client from the remaining players
+            //     var newMasterClient = alivePlayers.OrderBy(p => System.Guid.NewGuid()).FirstOrDefault();
+
+            //     Debug.Log("New master client: " + newMasterClient.NickName);
+                
+            //     if (newMasterClient != null)
+            //     {
+            //         // Set the new master client
+            //         PhotonNetwork.SetMasterClient(newMasterClient);
+
+            //         // Call the RPC to start the health decrease coroutine
+            //         //photonView.RPC("StartHealthDecrease", RpcTarget.All);
+            //         StartCoroutine(DecreaseHealthPeriodically());
+            //     }
+            //     else
+            //     {
+            //         Debug.LogError("No alive players available to become the new master client.");
+            //     }
+            // }
+                    
         }
 
         
@@ -1348,6 +1386,18 @@ namespace RPG.Character
         {
             mine.SetActive(false);
         }
+
+        // public override void OnMasterClientSwitched(Player newMasterClient)
+        // {
+        //     Debug.Log("Master client switched. New master: " + newMasterClient.NickName);
+
+        //     if (PhotonNetwork.IsMasterClient)
+        //     {
+        //         Debug.Log("I am the new master client. Starting DecreaseHealthPeriodically coroutine.");
+        //         //StartCoroutine(DecreaseHealthPeriodically());
+        //         StartCoroutine(DecreaseHealthPeriodically());
+        //     }
+        // }
 
 
     }
