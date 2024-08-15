@@ -1,7 +1,7 @@
 using UnityEngine;
 using Photon.Pun;
 using System.Collections;
-
+using RPG.Character;
 
 
 public class LaserProjectile : MonoBehaviourPun
@@ -51,29 +51,39 @@ public class LaserProjectile : MonoBehaviourPun
     {
         if (other.CompareTag("Player"))
         {
-            PhotonView targetPV = other.GetComponent<PhotonView>();
-            if (targetPV != null && !targetPV.IsMine)
+            gameObject.SetActive(false);
+            //PhotonNetwork.Destroy(gameObject);
+
+            // PhotonView targetPV = other.GetComponent<PhotonView>();
+            // if (targetPV != null && !targetPV.IsMine)
+            // {
+            //     targetPV.RPC("TakeDamage", RpcTarget.All, damage);
+            //     //PhotonNetwork.Destroy(gameObject);
+            // }
+            PlayerController targetPV = other.GetComponent<PlayerController>();
+            if (targetPV != null)
             {
-                targetPV.RPC("TakeDamage", RpcTarget.All, damage);
+                targetPV.TakeDamageWithoutRPC(damage);
+                //PhotonNetwork.Destroy(gameObject);
             }
 
             Debug.Log($"OnTriggerEnter called by: {PhotonNetwork.NickName}, IsMine: {photonView.IsMine}, IsMasterClient: {PhotonNetwork.IsMasterClient}");
 
             // Check if the current client owns the projectile or is the MasterClient
-            if (photonView.IsMine || PhotonNetwork.IsMasterClient)
-            {
-                // Transfer ownership to the MasterClient if it's not already the owner
-                if (!photonView.IsMine && PhotonNetwork.IsMasterClient)
-                {
-                    photonView.TransferOwnership(PhotonNetwork.MasterClient);
-                    StartCoroutine(DestroyAfterOwnershipTransfer());
-                }
-                else
-                {
-                    Debug.Log($"Destroying projectile by: {PhotonNetwork.NickName}, IsMine: {photonView.IsMine}, IsMasterClient: {PhotonNetwork.IsMasterClient}");
-                    PhotonNetwork.Destroy(gameObject);
-                }
-            }
+            // if (photonView.IsMine || PhotonNetwork.IsMasterClient)
+            // {
+            //     // Transfer ownership to the MasterClient if it's not already the owner
+            //     if (!photonView.IsMine && PhotonNetwork.IsMasterClient)
+            //     {
+            //         photonView.TransferOwnership(PhotonNetwork.MasterClient);
+            //         StartCoroutine(DestroyAfterOwnershipTransfer());
+            //     }
+            //     else
+            //     {
+            //         Debug.Log($"Destroying projectile by: {PhotonNetwork.NickName}, IsMine: {photonView.IsMine}, IsMasterClient: {PhotonNetwork.IsMasterClient}");
+            //         PhotonNetwork.Destroy(gameObject);
+            //     }
+            // }
         }
     }
 

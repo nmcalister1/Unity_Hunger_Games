@@ -3,6 +3,9 @@ using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
 using UnityEngine.Events;
+using RPG.Character;
+using TMPro;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
@@ -22,6 +25,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             return instance;
         }
     }
+
+    //[SerializeField] private TextMeshPro winnerText; // UI Text element for winner
+    //[SerializeField] private Camera mainCamera; 
 
     private void Awake()
     {
@@ -74,88 +80,68 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-    // public void StartCountdownTimer()
-    // {
-    //     GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+    public void CheckForWinner()
+    {
+        Debug.Log("CheckForWinner called.");
+        // if (!PhotonNetwork.IsMasterClient)
+        // {
+        //     return;
+        // }
 
-    //     foreach (GameObject player in players)
-    //     {
-    //         PhotonView playerPhotonView = player.GetComponent<PhotonView>();
-    //         if (playerPhotonView != null)
-    //         {
-    //             playerPhotonView.RPC("DisableMovementDuringCountdownRPC", RpcTarget.AllBuffered);
-    //         }
-    //     }
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        int aliveCount = 0;
+        GameObject lastAlivePlayer = null;
 
-    // }
+        foreach (GameObject player in players)
+        {
+            PlayerController playerController = player.GetComponent<PlayerController>();
+            if (playerController != null && playerController.isAlive)
+            {
+                Debug.Log("Player is alive: " + player.name);
+                aliveCount++;
+                lastAlivePlayer = player;
+            }
+        }
 
-    // [PunRPC]
-    // private void DisableMovementDuringCountdownRPC()
-    // {
-    //     DisableMovementDuringCountdown();
-    // }
+        Debug.Log("Alive count: " + aliveCount);
 
-    // private void DisableMovementDuringCountdown()
-    // {
-    //     CountdownTimer countdownTimer = GetComponent<CountdownTimer>();
-    
-    //     if (countdownTimer != null)
-    //     {
-    //         countdownTimer.enabled = true;
-    //         StartCoroutine(WaitForCountdown());
-           
-    //     }
-    // }
+        if (aliveCount == 1 && lastAlivePlayer != null)
+        {
+            lastAlivePlayer.GetComponent<PlayerController>().HandleWin();
+            //lastAlivePlayer.GetComponent<PlayerController>().HandleRestartGame();
+            // The last alive player sends an RPC to all players to load the main menu
 
-    // private IEnumerator WaitForCountdown()
-    // {
-    //     yield return new WaitForSeconds(3f);
-    //     DestroySpawnPointsRPC();
+            //CleanUp();
 
-    // }
+            photonView.RPC("LoadMainMenuForAll", RpcTarget.All);
+        }
 
-    // //[PunRPC]
-    // private void DestroySpawnPointsRPC()
-    // {
-    //     GameObject[] spawnPoints = GameObject.FindGameObjectsWithTag("PlayerSpawnPoint");
-    //     foreach (GameObject spawnPoint in spawnPoints)
-    //     {
-    //         Destroy(spawnPoint);
-    //     }
-    // }
+        
+    }
 
-    // private new void OnEnable()
-    // {
-    //     OnNewSuppliesEvent.AddListener(OnNewSupplies);
-    // }
+    [PunRPC]
+    private void LoadMainMenuForAll()
+    {
+        StartCoroutine(CleanupAndLoadMainMenu());
+    }
 
-    // private new void OnDisable()
-    // {
-    //     OnNewSuppliesEvent.RemoveListener(OnNewSupplies);
-    // }
+    private IEnumerator CleanupAndLoadMainMenu()
+    {
+        yield return new WaitForSeconds(5f);
 
-    // public void OnNewSupplies()
-    // {
-    //     Debug.Log("New supplies event has been triggered.");
-    //     photonView.RPC("StartNewSuppliesEvent", RpcTarget.All);
-    // }
+        // Leave the room to disconnect from the current game session
+        PhotonNetwork.LeaveRoom();
 
-    // [PunRPC]
-    // private void StartNewSuppliesEvent()
-    // {
-    //     StartCoroutine(ShowNewSuppliesText());
-    // }
+        // Wait until the player has left the room
+        while (PhotonNetwork.InRoom)
+        {
+            yield return null;
+        }
 
-    // private IEnumerator ShowNewSuppliesText()
-    // {
-    //     if (newSuppliesText != null)
-    //     {
-    //         Debug.Log("Showing new supplies text.");
-    //         newSuppliesText.gameObject.SetActive(true);
-    //         yield return new WaitForSeconds(2f);
-    //         newSuppliesText.gameObject.SetActive(false);
-    //     }
-    // }
+        // Load the main menu or game level 0
+        PhotonNetwork.LoadLevel(0);
+    }
+
 }
 
 

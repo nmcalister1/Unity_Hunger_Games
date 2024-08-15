@@ -99,20 +99,20 @@ namespace RPG.Character
         }
 
 
-        public void TakeDamage(int damage)
-        {
-            if (!photonView.IsMine) return;
+        // public void TakeDamage(int damage)
+        // {
+        //     if (!photonView.IsMine) return;
 
-            currentHealth -= damage;
-            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        //     currentHealth -= damage;
+        //     currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-            Debug.Log("Player health: " + currentHealth);
+        //     Debug.Log("Player health: " + currentHealth);
 
-            if (currentHealth <= 0)
-            {
-                DieHealth();
-            }
-        }
+        //     if (currentHealth <= 0)
+        //     {
+        //         DieHealth();
+        //     }
+        // }
 
         public void Heal(int amount)
         {

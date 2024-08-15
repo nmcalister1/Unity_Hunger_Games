@@ -36,6 +36,8 @@ namespace RPG.Character
 
         public float recoilForce = 10f;
 
+        public bool isAlive = true;
+
 
         private float verticalLookRotation;
         private bool grounded;
@@ -73,6 +75,7 @@ namespace RPG.Character
 
         public TextMeshProUGUI newSuppliesText;
         public TextMeshProUGUI lowHealthText;
+        public TextMeshProUGUI winnerText;
         public static UnityEvent OnNewSuppliesEvent = new UnityEvent();
 
         private const byte NEW_SUPPLIES_EVENT = 1;
@@ -92,7 +95,7 @@ namespace RPG.Character
         private int swingsRemaining = 3;
         private float swordSwingRadius = 3f; // Radius of the sword swing
         private int swordDamage = 50;
-        private bool canMove = true;
+        public bool canMove = true;
 
         private PlayerUIManager playerUIManager;
         
@@ -397,41 +400,56 @@ namespace RPG.Character
             if (health.currentHealth <= 0)
             {
                 // Handle player death
+                isAlive = false;
                 Die();
+                Debug.Log("Player died. Checking for winner...");
+                //photonView.RPC("CheckForWinner_RPC", RpcTarget.All);
+                GameManager.Instance.CheckForWinner();
+                
             }
             
         }
 
-        // private IEnumerator DecreaseHealthPeriodically()
-        // {
-        //     Debug.Log("DecreaseHealthPeriodically called.");
-        //     while (true)
-        //     {
-        //         yield return new WaitForSeconds(10f);
-        //         DecreaseAllPlayersHealth();
-        //     }
-        // }
+        
+        public void TakeDamageWithoutRPC(int damage)
+        {
+            //if (!PV.IsMine) return;
 
-        // private void DecreaseAllPlayersHealth()
-        // {
-        //     // photonView.RPC("TakeDamage", RpcTarget.All, 5);
-        //     // ChickenAtStart();
-        //     // Find all GameObjects with the "Player" tag
-        //     GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            // Reduce the player's health
+            health.currentHealth -= damage;
 
-        //     foreach (GameObject player in players)
-        //     {
-        //         Debug.Log("Player: " + player.name);
-        //         PhotonView playerPhotonView = player.GetComponent<PhotonView>();
+            health.currentHealth = Mathf.Clamp(health.currentHealth, 0, 100);
+
+            //health.SyncHealthHealth();
+            //photonView.RPC("UpdatePlayerHealth", RpcTarget.All, photonView.Owner.ActorNumber, (float)health.currentHealth);    
+
+            if (health.currentHealth <= 0)
+            {
+                // Handle player death
+                isAlive = false;
+                Die();
+                Debug.Log("Player died. Checking for winner...");
+                //photonView.RPC("CheckForWinner_RPC", RpcTarget.All);
+                GameManager.Instance.CheckForWinner();
                 
-        //         if (playerPhotonView != null)
-        //         {
-        //             // Call the TakeDamage method on each player's PhotonView
-        //             playerPhotonView.RPC("TakeDamage", RpcTarget.AllBuffered, 5);
-        //         }
-        //     }
-        // }
+            }
+            
+        }
 
+        
+        public void HandleWin()
+        {
+            // stop game logic
+            // show win screen
+            photonView.RPC("HnadleWin_RPC", RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void HnadleWin_RPC()
+        {
+            winnerText.gameObject.SetActive(true);
+            winnerText.text = $"You Won! Congragulations!";
+        }
 
 
 
@@ -443,8 +461,6 @@ namespace RPG.Character
 
             // Call RPC to hide the player for all clients
             StartCoroutine(WaitAndHidePlayer());
-            //health.SyncHealthHealth();
-            //photonView.RPC("RPC_HidePlayer", RpcTarget.AllBuffered);
         }
 
         private IEnumerator WaitAndHidePlayer()
@@ -468,40 +484,54 @@ namespace RPG.Character
         private void RPC_HidePlayer()
         {
             // Hide the player by disabling the game object
-            gameObject.SetActive(false);
-            // choose new player still alive and call startcoroutine
+            gameObject.SetActive(false);             
+        }
 
-            Debug.Log("player set to inactive and checking if ismasterclient");
-            Debug.Log("PhotonNetwork.IsMasterClient: " + PhotonNetwork.IsMasterClient);
-            // Check if the current player was the master client
-            // if (PhotonNetwork.IsMasterClient)
+        public void HandleRestartGame()
+        {
+            
+            
+            photonView.RPC("HandleRestartGame_RPC", RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void HandleRestartGame_RPC()
+        {
+            StartCoroutine(CleanupAndLoadMainMenu());
+            
+        }
+
+        private IEnumerator CleanupAndLoadMainMenu()
+        {
+            yield return new WaitForSeconds(5f);
+
+            // Kick all players from the room
+            foreach (Player player in PhotonNetwork.PlayerList)
+            {
+                //PhotonNetwork.CloseConnection(player);
+                PhotonNetwork.LeaveRoom();
+
+                // Wait until the player has left the room
+                while (PhotonNetwork.InRoom)
+                {
+                    yield return null;
+                }
+
+                // Load the main menu or game level 0
+                PhotonNetwork.LoadLevel(0);
+            }
+
+            // PhotonNetwork.LeaveRoom();
+            
+
+            // // Wait until the player has left the room
+            // while (PhotonNetwork.InRoom)
             // {
-            //     // Get all players in the room
-            //     var players = PhotonNetwork.PlayerList;
-                
-            //     // Filter out players who are still active
-            //     var alivePlayers = players.Where(player => player != PhotonNetwork.LocalPlayer && player.TagObject != null);
-
-            //     // Choose a random new master client from the remaining players
-            //     var newMasterClient = alivePlayers.OrderBy(p => System.Guid.NewGuid()).FirstOrDefault();
-
-            //     Debug.Log("New master client: " + newMasterClient.NickName);
-                
-            //     if (newMasterClient != null)
-            //     {
-            //         // Set the new master client
-            //         PhotonNetwork.SetMasterClient(newMasterClient);
-
-            //         // Call the RPC to start the health decrease coroutine
-            //         //photonView.RPC("StartHealthDecrease", RpcTarget.All);
-            //         StartCoroutine(DecreaseHealthPeriodically());
-            //     }
-            //     else
-            //     {
-            //         Debug.LogError("No alive players available to become the new master client.");
-            //     }
+            //     yield return null;
             // }
-                    
+
+            // // Load the main menu or game level 0
+            // PhotonNetwork.LoadLevel(0);
         }
 
         
@@ -816,7 +846,7 @@ namespace RPG.Character
             currentEffect = Instantiate(fastFeetEffectPrefab, transform.position, Quaternion.identity, transform);
 
             // Increase speed and start the coroutine to deactivate after delay
-            walkSpeed = 7.5f;
+            walkSpeed = 8f;
             fastFeetCoroutine = StartCoroutine(DeactivateFastFeetEffectAfterDelay(10f));
         }
 
@@ -860,7 +890,7 @@ namespace RPG.Character
 
 
             // Detect all players within the 10-block radius
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 20f);
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 30f);
             foreach (var hitCollider in hitColliders)
             {
                 PlayerController player = hitCollider.GetComponent<PlayerController>();
@@ -1113,7 +1143,7 @@ namespace RPG.Character
 
 
                     // Set the spawn position to be slightly in front of the player
-                    Vector3 spawnPosition = transform.position + transform.forward * 1.5f;
+                    Vector3 spawnPosition = transform.position + transform.forward * 2f;
 
 
 
@@ -1151,7 +1181,7 @@ namespace RPG.Character
 
 
                     // Start coroutine to destroy the projectile after 5 seconds
-                    StartCoroutine(DestroyProjectileAfterDelay(laserProjectile, 5f));
+                    //StartCoroutine(DestroyProjectileAfterDelay(laserProjectile, 5f));
 
 
 
@@ -1198,7 +1228,7 @@ namespace RPG.Character
 
 
                     // Set the spawn position to be slightly in front of the player
-                    Vector3 spawnPosition = transform.position + transform.forward * 1.5f;
+                    Vector3 spawnPosition = transform.position + transform.forward * 2f + Vector3.up * 1f;;
 
 
 
@@ -1240,7 +1270,7 @@ namespace RPG.Character
 
 
                     // Start coroutine to destroy the projectile after 5 seconds
-                    StartCoroutine(DestroyProjectileAfterDelay(rocketProjectile, 5f));
+                    //StartCoroutine(DestroyProjectileAfterDelay(rocketProjectile, 5f));
 
 
 

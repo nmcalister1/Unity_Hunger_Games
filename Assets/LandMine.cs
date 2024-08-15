@@ -1,5 +1,6 @@
 using UnityEngine;
 using Photon.Pun;
+using RPG.Character;
 
 public class LandMine : MonoBehaviourPun
 {
@@ -12,6 +13,7 @@ public class LandMine : MonoBehaviourPun
 
         if (other.CompareTag("Player"))
         {
+            //gameObject.SetActive(false);
             Debug.Log("Player entered trigger: " + other.gameObject.name); // Debug statement
 
             PhotonView targetPV = other.GetComponent<PhotonView>();
@@ -30,6 +32,14 @@ public class LandMine : MonoBehaviourPun
                 // Destroy the land mine
                 photonView.RPC("RPC_DestroyLandMine", RpcTarget.All);
             }
+
+            // PlayerController targetPV = other.GetComponent<PlayerController>();
+            // if (targetPV != null)
+            // {
+            //     targetPV.TakeDamageWithoutRPC(damage);
+            //     //PhotonNetwork.Destroy(gameObject);
+            //     targetPV.photonView.RPC("RPC_ShowExplosionEffect", RpcTarget.All, transform.position);
+            // }
         }
     }
 
@@ -47,5 +57,8 @@ public class LandMine : MonoBehaviourPun
         {
             PhotonNetwork.Destroy(gameObject);
         }
+    
+        //PhotonNetwork.Destroy(gameObject);
+        
     }
 }

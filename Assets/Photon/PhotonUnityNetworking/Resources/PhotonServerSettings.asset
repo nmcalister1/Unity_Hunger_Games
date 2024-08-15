@@ -80,6 +80,14 @@ MonoBehaviour:
   - DisableMovementDuringCountdownRPC
   - EnableMovementDuringCountdownRPC
   - EnableMovementRPC
+  - OnWinnerDeclared
+  - SetCameraToMain
+  - CheckForWinner_RPC
+  - HandleWin
+  - HnadleWin_RPC
+  - HandleRestartGame_RPC
+  - CleanupAndLoadMainMenu
+  - LoadMainMenuForAll
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
