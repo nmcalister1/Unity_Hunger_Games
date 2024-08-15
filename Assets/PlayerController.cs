@@ -18,6 +18,7 @@ namespace RPG.Character
         [SerializeField] private GameObject fastFeetEffectPrefab; // Reference to the Fast Feet effect prefab
         [SerializeField] private GameObject lightningEffectPrefab; // Reference to the Lightning effect prefab
         [SerializeField] private GameObject healingEffectPrefab; // Reference to the Invisibility effect prefab
+        [SerializeField] private GameObject locationRevealEffectPrefab; // Reference to the Invisibility effect prefab
         [SerializeField] private GameObject sciFiRifle;
 
 
@@ -170,6 +171,7 @@ namespace RPG.Character
             ShootRocketLauncher();
             UseLandMine();
             UseSword();
+            UseLocationRevealer();
 
             CheckHealth();
             CheckFallOffMap();
@@ -451,6 +453,26 @@ namespace RPG.Character
             winnerText.text = $"You Won! Congragulations!";
         }
 
+        public void HandleReturnToLobby()
+        {
+            StartCoroutine(HandleReturnToLobbyCoroutine());
+        }
+
+        private IEnumerator HandleReturnToLobbyCoroutine()
+        {
+            // stop game logic
+            // show win screen
+            yield return new WaitForSeconds(5f);
+            photonView.RPC("HandleReturnToLobby_RPC", RpcTarget.All);
+        }
+
+        [PunRPC]
+        private void HandleReturnToLobby_RPC()
+        {
+            PhotonNetwork.LeaveRoom();
+            PhotonNetwork.LoadLevel(0);
+        }
+
 
 
 
@@ -588,6 +610,10 @@ namespace RPG.Character
             else if (other.CompareTag("Mines"))
             {
                 PickUpItem("Mines", other.gameObject);
+            }
+            else if (other.CompareTag("LocationRevealer"))
+            {
+                PickUpItem("locationrevealer", other.gameObject);
             }
         }
 
@@ -929,6 +955,74 @@ namespace RPG.Character
             GameObject lightningEffect = Instantiate(lightningEffectPrefab, position, Quaternion.identity);
             yield return new WaitForSeconds(0.7f); // Duration of the effect
             Destroy(lightningEffect); // Remove the effect after 1 second
+        }
+
+
+
+
+
+
+        private void UseLocationRevealer()
+        {
+            if (inventory.currentInventory != null && inventory.currentInventory == "locationrevealer" && Input.GetKeyDown(KeyCode.E))
+            {
+                Debug.Log("location revealer activated!");
+                inventory.ResetInventory(); // Reset the inventory
+                StartCoroutine(ActivateLocationRevealer());
+            }
+        }
+
+
+
+
+        private IEnumerator ActivateLocationRevealer()
+        {
+            Debug.Log("Activating location revealer");
+
+
+
+
+            // Detect all players within the 10-block radius
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 200f);
+            foreach (var hitCollider in hitColliders)
+            {
+                PlayerController player = hitCollider.GetComponent<PlayerController>();
+                if (player != null && player != this) // Skip the player who activated lightning
+                {
+                    player.ShowRevealLocationEffect(player.transform.position);
+                    // PhotonView targetPV = player.GetComponent<PhotonView>();
+                    // if (targetPV != null)
+                    // {
+                    //     Debug.Log($"Damaging player {targetPV.ViewID} at {targetPV.transform.position}");
+                    //     targetPV.RPC("TakeDamage", RpcTarget.All, 10); // Apply damage
+                    //     targetPV.RPC("ShowLightningEffect", RpcTarget.All, player.transform.position); // Show effect
+                    // }
+                }
+            }
+
+
+
+
+            yield return null; // Optional, you can remove this if it's not necessary
+        }
+
+
+
+
+        //[PunRPC]
+        private void ShowRevealLocationEffect(Vector3 position)
+        {
+            StartCoroutine(ShowRevealLocationEffectCoroutine(position));
+        }
+
+
+
+
+        private IEnumerator ShowRevealLocationEffectCoroutine(Vector3 position)
+        {
+            GameObject revealLocationEffect = Instantiate(locationRevealEffectPrefab, position, Quaternion.identity);
+            yield return new WaitForSeconds(2.5f); // Duration of the effect
+            Destroy(revealLocationEffect); // Remove the effect after 1 second
         }
 
 

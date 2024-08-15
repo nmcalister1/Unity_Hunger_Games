@@ -18,13 +18,14 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
     public GameObject chickenPrefab;
     public GameObject minesPrefab;
     public GameObject swordsPrefab;
+    public GameObject revealLocationPrefab;
     public float spawnInterval = 15f; // Time interval in seconds
     public UnityEvent onNewSupplies;
     private const byte NEW_SUPPLIES_EVENT = 1; // Event code for new supplies
 
     private List<Vector3> spawnTilePositions = new List<Vector3>(); // List to store spawn tile positions
     private GameObject[] prefabs; // Array to store all prefabs
-    private float[] probabilities; // Array to store probabilities
+    //private float[] probabilities; // Array to store probabilities
     //private float chickenProbability = 0.16f; // Initial probability of chickenPrefab
 
     private void Start()
@@ -44,21 +45,22 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
                 invisibilityCloakPrefab,
                 chickenPrefab,
                 minesPrefab,
-                swordsPrefab
+                swordsPrefab,
+                revealLocationPrefab
             };
 
             // Initialize the probabilities
-            probabilities = new float[]
-            {
-                0.125f, // fastFeetPrefab
-                0.125f, // lightningPrefab
-                0.125f, // laserGunPrefab
-                0.125f, // rocketLauncherPrefab
-                0.125f, // invisibilityCloakPrefab
-                0.125f, // chickenPrefab
-                0.125f, // minesPrefab
-                0.125f  // swordsPrefab
-            };
+            // probabilities = new float[]
+            // {
+            //     0.125f, // fastFeetPrefab
+            //     0.125f, // lightningPrefab
+            //     0.125f, // laserGunPrefab
+            //     0.125f, // rocketLauncherPrefab
+            //     0.125f, // invisibilityCloakPrefab
+            //     0.125f, // chickenPrefab
+            //     0.125f, // minesPrefab
+            //     0.125f  // swordsPrefab
+            // };
 
             // Spawn the initial set of prefabs
             for (int i = 0; i < 10; i++)
@@ -140,27 +142,30 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
 
     private GameObject ChoosePrefab()
     {
-        float total = 0f;
-        foreach (float prob in probabilities)
-        {
-            total += prob;
-        }
+        // float total = 0f;
+        // foreach (float prob in probabilities)
+        // {
+        //     total += prob;
+        // }
 
-        float randomPoint = Random.value * total;
+        // float randomPoint = Random.value * total;
 
-        for (int i = 0; i < probabilities.Length; i++)
-        {
-            if (randomPoint < probabilities[i])
-            {
-                return prefabs[i];
-            }
-            else
-            {
-                randomPoint -= probabilities[i];
-            }
-        }
+        // for (int i = 0; i < probabilities.Length; i++)
+        // {
+        //     if (randomPoint < probabilities[i])
+        //     {
+        //         return prefabs[i];
+        //     }
+        //     else
+        //     {
+        //         randomPoint -= probabilities[i];
+        //     }
+        // }
 
-        return null; // Fallback in case something goes wrong
+        // return null; // Fallback in case something goes wrong
+
+        int randomIndex = Random.Range(0, prefabs.Length);
+        return prefabs[randomIndex];
     }
 
     private void SpawnItemsAtStart()

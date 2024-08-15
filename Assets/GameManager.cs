@@ -95,6 +95,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         foreach (GameObject player in players)
         {
             PlayerController playerController = player.GetComponent<PlayerController>();
+            //PhotonView playerPhotonView = player.GetComponent<PhotonView>();
             if (playerController != null && playerController.isAlive)
             {
                 Debug.Log("Player is alive: " + player.name);
@@ -108,12 +109,13 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (aliveCount == 1 && lastAlivePlayer != null)
         {
             lastAlivePlayer.GetComponent<PlayerController>().HandleWin();
+            lastAlivePlayer.GetComponent<PlayerController>().HandleReturnToLobby();
             //lastAlivePlayer.GetComponent<PlayerController>().HandleRestartGame();
             // The last alive player sends an RPC to all players to load the main menu
 
             //CleanUp();
 
-            photonView.RPC("LoadMainMenuForAll", RpcTarget.All);
+            //lastAlivePlayer.GetComponent<PhotonView>().RPC("LoadMainMenuForAll", RpcTarget.All);
         }
 
         
@@ -128,18 +130,23 @@ public class GameManager : MonoBehaviourPunCallbacks
     private IEnumerator CleanupAndLoadMainMenu()
     {
         yield return new WaitForSeconds(5f);
-
-        // Leave the room to disconnect from the current game session
-        PhotonNetwork.LeaveRoom();
-
-        // Wait until the player has left the room
-        while (PhotonNetwork.InRoom)
-        {
-            yield return null;
-        }
-
-        // Load the main menu or game level 0
         PhotonNetwork.LoadLevel(0);
+
+        // foreach (Player player in PhotonNetwork.PlayerList)
+        // {
+        //     //PhotonNetwork.CloseConnection(player);
+        //     PhotonNetwork.LeaveRoom();
+
+        //     // Wait until the player has left the room
+        //     while (PhotonNetwork.InRoom)
+        //     {
+        //         yield return null;
+        //     }
+
+        //     // Load the main menu or game level 0
+        //     PhotonNetwork.LoadLevel(0);
+        // }
+
     }
 
 }
