@@ -22,6 +22,13 @@ public class Launcher : MonoBehaviourPunCallbacks
     private void Awake()
     {
         Instance = this;
+        // if (Instance != null && Instance != this)
+        // {
+        //     Destroy(gameObject);
+        //     return;
+        // }
+        // Instance = this;
+        // DontDestroyOnLoad(gameObject);
     }
     // Start is called before the first frame update
     void Start()
@@ -114,7 +121,10 @@ public class Launcher : MonoBehaviourPunCallbacks
             Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(players[i]);
         }
 
-        startGameButton.SetActive(PhotonNetwork.IsMasterClient);
+        //startGameButton.SetActive(PhotonNetwork.IsMasterClient);
+
+        // Enable the start button only if there are between 2 and 8 players in the room and the player is the master client
+        startGameButton.SetActive(PhotonNetwork.IsMasterClient && players.Length >= 2 && players.Length <= 8);
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)
@@ -130,7 +140,13 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public void StartGame()
     {
-        PhotonNetwork.LoadLevel(1);
+        //PhotonNetwork.LoadLevel(1);
+
+        // Check if there are between 2 and 8 players before starting the game
+        if (PhotonNetwork.PlayerList.Length >= 2 && PhotonNetwork.PlayerList.Length <= 8)
+        {
+            PhotonNetwork.LoadLevel(1);
+        }
     }
 
     public void LeaveRoom()
@@ -147,6 +163,14 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
+        // Clean up any player-specific data here if needed
+        // foreach (var view in PhotonNetwork.PhotonViewCollection)
+        // {
+        //     if (view.IsMine)
+        //     {
+        //         PhotonNetwork.Destroy(view);
+        //     }
+        // }
         MenuManager.Instance.OpenMenu("title");
     }
 
@@ -167,9 +191,34 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
     }
 
+    // public override void OnPlayerEnteredRoom(Player newPlayer)
+    // {
+    //     Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer);
+    // }
+
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer);
+        // Enable the start button only if there are between 2 and 8 players in the room and the player is the master client
+        startGameButton.SetActive(PhotonNetwork.IsMasterClient && PhotonNetwork.PlayerList.Length >= 2 && PhotonNetwork.PlayerList.Length <= 8);
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        // Rebuild the player list
+        foreach (Transform child in playerListContent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        Player[] players = PhotonNetwork.PlayerList;
+        for (int i = 0; i < players.Length; i++)
+        {
+            Instantiate(PlayerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(players[i]);
+        }
+
+        // Enable the start button only if there are between 2 and 8 players in the room and the player is the master client
+        startGameButton.SetActive(PhotonNetwork.IsMasterClient && PhotonNetwork.PlayerList.Length >= 2 && PhotonNetwork.PlayerList.Length <= 8);
     }
 
 }

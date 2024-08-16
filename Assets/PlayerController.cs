@@ -463,13 +463,28 @@ namespace RPG.Character
             // stop game logic
             // show win screen
             yield return new WaitForSeconds(5f);
-            photonView.RPC("HandleReturnToLobby_RPC", RpcTarget.All);
+            //PhotonNetwork.DestroyAll();
+            Die();
+            photonView.RPC("LeaveRoomAndLoadLobby_RPC", RpcTarget.All);
         }
 
         [PunRPC]
-        private void HandleReturnToLobby_RPC()
+        private void LeaveRoomAndLoadLobby_RPC()
         {
+            
+            StartCoroutine(LeaveRoomAndLoadLobby());
+        }
+
+
+        //[PunRPC]
+        private IEnumerator LeaveRoomAndLoadLobby()
+        {
+            //Destroy(gameObject);
             PhotonNetwork.LeaveRoom();
+            while (PhotonNetwork.InRoom)
+            {
+                yield return null;
+            }
             PhotonNetwork.LoadLevel(0);
         }
 
@@ -506,7 +521,8 @@ namespace RPG.Character
         private void RPC_HidePlayer()
         {
             // Hide the player by disabling the game object
-            gameObject.SetActive(false);             
+            //gameObject.SetActive(false);  
+            PhotonNetwork.Destroy(gameObject);           
         }
 
         public void HandleRestartGame()

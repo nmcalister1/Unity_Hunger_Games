@@ -28,6 +28,8 @@ TagManager:
   - ConnectToGame
   - SpawnWeapon
   - LocationRevealer
+  - BounceTile
+  - SpeedUpTile
   layers:
   - Default
   - TransparentFX

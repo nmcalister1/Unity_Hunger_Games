@@ -89,6 +89,7 @@ MonoBehaviour:
   - CleanupAndLoadMainMenu
   - LoadMainMenuForAll
   - HandleReturnToLobby_RPC
+  - LeaveRoomAndLoadLobby_RPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
