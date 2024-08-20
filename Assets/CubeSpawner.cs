@@ -97,9 +97,6 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
             yield return new WaitForSeconds(spawnInterval);
 
             // Raise the UnityEvent
-            //onNewSupplies.Invoke();
-
-            // Raise the UnityEvent
             PlayerController.OnNewSuppliesEvent.Invoke();
 
             // Spawn the specified number of prefabs at each interval
@@ -128,10 +125,13 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
         // Offset the spawn position to sit on top of the tile, accounting for cube height
         Vector3 spawnPosition = randomPosition + new Vector3(0, 1.5f, 0);
 
+        //Debug.Log($"Spawning {prefabToSpawn.name} at {spawnPosition}");
+
         // Use PhotonNetwork.Instantiate to spawn the prefab
         if (prefabToSpawn != null)
         {
             string prefabName = prefabToSpawn.name; // Make sure this matches the prefab name in the Resources folder
+            Debug.Log($"Spawning {prefabName} at {spawnPosition}");
             PhotonNetwork.Instantiate("Prefabs/" + prefabName, spawnPosition, Quaternion.identity);
         }
         else
@@ -142,28 +142,6 @@ public class CubeSpawner : MonoBehaviourPunCallbacks
 
     private GameObject ChoosePrefab()
     {
-        // float total = 0f;
-        // foreach (float prob in probabilities)
-        // {
-        //     total += prob;
-        // }
-
-        // float randomPoint = Random.value * total;
-
-        // for (int i = 0; i < probabilities.Length; i++)
-        // {
-        //     if (randomPoint < probabilities[i])
-        //     {
-        //         return prefabs[i];
-        //     }
-        //     else
-        //     {
-        //         randomPoint -= probabilities[i];
-        //     }
-        // }
-
-        // return null; // Fallback in case something goes wrong
-
         int randomIndex = Random.Range(0, prefabs.Length);
         return prefabs[randomIndex];
     }
